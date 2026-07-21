@@ -77,7 +77,7 @@ send_telegram(f"📝 *퀴즈 시작: {quiz['title']}*\n\n글을 잘 읽었나요
 
 q = quiz["questions"][0]
 if q["type"] == "multiple":
-    buttons = [[{"text": opt.split(".")[0].strip(), "callback_data": json.dumps({"qIndex": 0, "answer": opt.split(".")[0].strip()})}] for opt in q["options"]]
+    buttons = [[{"text": opt, "callback_data": json.dumps({"qIndex": 0, "answer": opt[0]})}] for opt in q["options"]]
     send_telegram(f"*Q1 [{q['difficulty']}] (객관식)*\n{q['q']}", reply_markup={"inline_keyboard": buttons})
 else:
     send_telegram(f"*Q1 [{q['difficulty']}] (서술형)*\n{q['q']}")
