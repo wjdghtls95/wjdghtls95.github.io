@@ -50,10 +50,9 @@ mc = [q for q in quiz["questions"] if q["type"] == "multiple"]
 essay = [q for q in quiz["questions"] if q["type"] == "essay"]
 quiz["questions"] = mc + essay
 
-quiz["draft_file"] = DRAFT_FILE
+quiz["draftFile"] = DRAFT_FILE
 quiz["content"] = content[:2000]
-quiz["user_answers"] = {}
-quiz["current_essay_index"] = None
+quiz["userAnswers"] = {}
 
 # KV에 세션 저장
 kv_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{TELEGRAM_CHAT_ID}"
