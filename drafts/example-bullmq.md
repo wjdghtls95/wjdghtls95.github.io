@@ -27,3 +27,4 @@ Railway 환경에서 Redis를 이미 사용 중이라 추가 비용 없이 BullM
 ## 배운 점
 
 `addRepeatableJob()`에 결정론적 key를 넣지 않으면 `removeRepeatableByKey`가 불가능하다. 반드시 key를 명시해야 한다.
+ 
