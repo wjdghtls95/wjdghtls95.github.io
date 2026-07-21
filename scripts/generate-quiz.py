@@ -1,6 +1,8 @@
 import os
 import json
+import hashlib
 import requests
+from datetime import datetime, timezone, timedelta
 from openai import OpenAI
 
 DRAFT_FILE = os.environ["DRAFT_FILE"]
@@ -10,9 +12,39 @@ TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 CF_ACCOUNT_ID = os.environ["CF_ACCOUNT_ID"]
 CF_API_TOKEN = os.environ["CF_API_TOKEN"]
 KV_NAMESPACE_ID = "36dfe08248484462b941e184e6e79c39"
+QUEUE_MAX = 5
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
+
+# ===== KV Helpers =====
+
+def get_kv(key):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{key}"
+    resp = requests.get(url, headers={"Authorization": f"Bearer {CF_API_TOKEN}"})
+    if resp.status_code == 404:
+        return None
+    return resp.text
+
+def put_kv(key, value_str, expiration_ttl=None):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{key}"
+    params = {}
+    if expiration_ttl:
+        params["expiration_ttl"] = expiration_ttl
+    requests.put(
+        url,
+        headers={"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "text/plain"},
+        params=params,
+        data=value_str.encode("utf-8"),
+    )
+
+def send_telegram(text):
+    requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+        json={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"},
+    )
+
+# ===== Quiz Generation =====
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -53,25 +85,42 @@ quiz["draftFile"] = DRAFT_FILE
 quiz["content"] = content[:2000]
 quiz["userAnswers"] = {}
 
-# KV에 세션 저장
-kv_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{TELEGRAM_CHAT_ID}"
-requests.put(
-    kv_url,
-    headers={"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "application/json"},
-    data=json.dumps(quiz, ensure_ascii=True).encode("utf-8"),
-)
+# ===== Queue Management =====
 
-# 첫 번째 질문 전송
-q = quiz["questions"][0]
-mc_total = len(mc)
-buttons = [[{"text": opt, "callback_data": json.dumps({"q": 0, "a": opt[0]})}] for opt in q["options"]]
+# 큐 상한 체크
+queue_raw = get_kv("PENDING_QUEUE")
+queue = json.loads(queue_raw) if queue_raw else []
 
-requests.post(
-    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-    json={
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": f"📝 *퀴즈 시작: {quiz['title']}*\n\n*Q1/{mc_total} [{q['difficulty']}] (객관식)*\n\n{q['q']}",
-        "parse_mode": "Markdown",
-        "reply_markup": {"inline_keyboard": buttons},
-    },
+if len(queue) >= QUEUE_MAX:
+    send_telegram(
+        f"⚠️ 큐가 꽉 찼습니다 ({QUEUE_MAX}개)\n"
+        f"기존 글이 발행된 후 다시 push해주세요\n\n"
+        f"미등록: _{quiz['title']}_"
+    )
+    raise SystemExit(0)
+
+# 퀴즈 데이터를 고유 키로 저장 (7일 TTL)
+slug = hashlib.md5(DRAFT_FILE.encode()).hexdigest()[:8]
+quiz_key = f"pending_quiz_{slug}"
+put_kv(quiz_key, json.dumps(quiz, ensure_ascii=True), expiration_ttl=7 * 86400)
+
+# 큐에 추가
+queue.append({"file": DRAFT_FILE, "title": quiz["title"], "quizKey": quiz_key})
+put_kv("PENDING_QUEUE", json.dumps(queue, ensure_ascii=True))
+
+# 첫 번째 항목이면 NEXT_QUIZ_DATE를 오늘로 설정
+existing_date = get_kv("NEXT_QUIZ_DATE")
+if not existing_date:
+    today_kst = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d")
+    put_kv("NEXT_QUIZ_DATE", today_kst)
+
+# 퀴즈 예정일 읽기
+quiz_date = get_kv("NEXT_QUIZ_DATE")
+queue_position = len(queue)
+
+send_telegram(
+    f"📥 *퀴즈 등록됐습니다*\n\n"
+    f"제목: _{quiz['title']}_\n"
+    f"큐 위치: {queue_position}번째\n"
+    f"퀴즈 예정: {quiz_date} 18:00 KST"
 )
