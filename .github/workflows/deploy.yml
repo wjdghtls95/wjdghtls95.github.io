@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'astro.config.mjs'
-      - 'package.json'
 
 permissions:
   contents: read
