@@ -22,10 +22,10 @@ jobs:
       - name: 퀴즈 생성 및 Telegram 전송
         if: steps.detect.outputs.file != ''
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DRAFT_FILE: ${{ steps.detect.outputs.file }}
         run: |
-          pip install anthropic requests
+          pip install openai requests
           python scripts/generate-quiz.py

@@ -1,17 +1,17 @@
 import os
 import json
-import anthropic
 import requests
+from openai import OpenAI
 
 DRAFT_FILE = os.environ["DRAFT_FILE"]
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 prompt = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 
@@ -33,15 +33,15 @@ prompt = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 글 내용:
 {content}"""
 
-response = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
     max_tokens=2000,
+    response_format={"type": "json_object"},
     messages=[{"role": "user", "content": prompt}],
 )
 
-quiz = json.loads(response.content[0].text)
+quiz = json.loads(response.choices[0].message.content)
 
-# Telegram으로 퀴즈 전송
 def send_telegram(text: str) -> None:
     requests.post(
         f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
@@ -57,7 +57,6 @@ for i, q in enumerate(quiz["questions"], 1):
     else:
         send_telegram(f"*Q{i} [{q['difficulty']}] (서술형)*\n{q['q']}")
 
-# 퀴즈 데이터와 파일 경로를 저장 (채점 봇이 읽음)
 quiz["draft_file"] = DRAFT_FILE
 with open("/tmp/quiz_session.json", "w", encoding="utf-8") as f:
     json.dump(quiz, f, ensure_ascii=False)
