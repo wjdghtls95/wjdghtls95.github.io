@@ -54,6 +54,40 @@ quiz["draftFile"] = DRAFT_FILE
 quiz["content"] = content[:2000]
 quiz["userAnswers"] = {}
 
+# 객관식 질문 목록
+mc_questions = [q for q in quiz["questions"] if q["type"] == "multiple"]
+
+# 메시지 텍스트 — 모든 객관식 한 번에 표시
+lines = [f"📝 *퀴즈: {quiz['title']}*\n"]
+for i, q in enumerate(mc_questions):
+    lines.append(f"*Q{i + 1} [{q['difficulty']}]*")
+    lines.append(q["q"])
+    for opt in q["options"]:
+        lines.append(f"  {opt}")
+    lines.append("")
+
+lines.append("━━━━━━━━━━━━━━")
+lines.append(f"아래 버튼으로 Q1~Q{len(mc_questions)} 답을 선택하세요")
+
+mc_text = "\n".join(lines)
+
+# 각 문제마다 A B C D 버튼 한 줄
+keyboard = {
+    "inline_keyboard": [
+        [
+            {"text": letter, "callback_data": json.dumps({"q": i, "a": letter})}
+            for letter in ["A", "B", "C", "D"]
+        ]
+        for i in range(len(mc_questions))
+    ]
+}
+
+resp = requests.post(
+    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+    json={"chat_id": TELEGRAM_CHAT_ID, "text": mc_text, "parse_mode": "Markdown", "reply_markup": keyboard},
+)
+quiz["mcMessageId"] = resp.json()["result"]["message_id"]
+
 # KV에 세션 저장
 kv_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{TELEGRAM_CHAT_ID}"
 requests.put(
@@ -61,27 +95,3 @@ requests.put(
     headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
     data=json.dumps(quiz, ensure_ascii=False),
 )
-
-# 첫 번째 질문 전송
-def send_telegram(text: str, reply_markup=None) -> None:
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"}
-    if reply_markup:
-        payload["reply_markup"] = reply_markup
-    requests.post(
-        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-        json=payload,
-    )
-
-mc_questions = [q for q in quiz["questions"] if q["type"] == "multiple"]
-mc_text = f"📝 *퀴즈 시작: {quiz['title']}*\n\n"
-
-for i, q in enumerate(mc_questions):
-    mc_text += f"*Q{i + 1} [{q['difficulty']}]*\n{q['q']}\n"
-    for opt in q["options"]:
-        mc_text += f"  {opt}\n"
-    mc_text += "\n"
-
-mc_text += "━━━━━━━━━━━━━━\n"
-mc_text += f"📌 *{len(mc_questions)}글자로 답하세요* (예: `ABCDBCA`)"
-
-send_telegram(mc_text)
