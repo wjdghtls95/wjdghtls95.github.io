@@ -1,0 +1,31 @@
+name: Quiz Pipeline
+
+on:
+  push:
+    paths:
+      - 'drafts/**'
+
+jobs:
+  generate-quiz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 새로 추가된 draft 파일 감지
+        id: detect
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'drafts/*.md' 'drafts/*.mdx' | head -1)
+          echo "file=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: 퀴즈 생성 및 Telegram 전송
+        if: steps.detect.outputs.file != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DRAFT_FILE: ${{ steps.detect.outputs.file }}
+        run: |
+          pip install anthropic requests
+          python scripts/generate-quiz.py
