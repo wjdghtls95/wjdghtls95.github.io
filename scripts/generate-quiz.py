@@ -57,8 +57,8 @@ quiz["userAnswers"] = {}
 kv_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{TELEGRAM_CHAT_ID}"
 requests.put(
     kv_url,
-    headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
-    data=json.dumps(quiz, ensure_ascii=False),
+    headers={"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "application/json"},
+    data=json.dumps(quiz, ensure_ascii=True).encode("utf-8"),
 )
 
 # 첫 번째 질문 전송
