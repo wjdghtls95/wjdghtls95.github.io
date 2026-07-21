@@ -1,0 +1,26 @@
+name: Publish Post
+
+on:
+  repository_dispatch:
+    types: [publish-post]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: draft → posts 이동
+        run: |
+          DRAFT_FILE="${{ github.event.client_payload.draft_file }}"
+          FILENAME=$(basename "$DRAFT_FILE")
+          cp "$DRAFT_FILE" "src/content/posts/$FILENAME"
+          rm "$DRAFT_FILE"
+
+      - name: 커밋 및 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/posts/ drafts/
+          git diff --cached --quiet || git commit -m "publish: $(basename ${{ github.event.client_payload.draft_file }} .md)"
+          git push

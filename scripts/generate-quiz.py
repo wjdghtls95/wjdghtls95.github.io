@@ -7,6 +7,9 @@ DRAFT_FILE = os.environ["DRAFT_FILE"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+CF_ACCOUNT_ID = os.environ["CF_ACCOUNT_ID"]
+CF_API_TOKEN = os.environ["CF_API_TOKEN"]
+KV_NAMESPACE_ID = "36dfe08248484462b941e184e6e79c39"
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
@@ -25,8 +28,8 @@ prompt = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 {{
   "title": "글 제목",
   "questions": [
-    {{"type": "multiple", "difficulty": "easy", "q": "질문", "options": ["A. 선택지", "B. 선택지", "C. 선택지", "D. 선택지"], "answer": "A"}},
-    {{"type": "essay", "difficulty": "hard", "q": "질문"}}
+    {{"type": "multiple", "difficulty": "easy", "q": "질문", "options": ["A. 선택지", "B. 선택지", "C. 선택지", "D. 선택지"], "answer": "A", "section": "섹션명"}},
+    {{"type": "essay", "difficulty": "hard", "q": "질문", "section": "섹션명"}}
   ]
 }}
 
@@ -41,24 +44,34 @@ response = client.chat.completions.create(
 )
 
 quiz = json.loads(response.choices[0].message.content)
+quiz["draft_file"] = DRAFT_FILE
+quiz["content"] = content[:2000]
+quiz["user_answers"] = {}
+quiz["current_essay_index"] = None
 
-def send_telegram(text: str) -> None:
+# KV에 세션 저장
+kv_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{TELEGRAM_CHAT_ID}"
+requests.put(
+    kv_url,
+    headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
+    data=json.dumps(quiz, ensure_ascii=False),
+)
+
+# 첫 번째 질문 전송
+def send_telegram(text: str, reply_markup=None) -> None:
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"}
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     requests.post(
         f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-        json={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"},
+        json=payload,
     )
 
-send_telegram(f"📝 *퀴즈 시작: {quiz['title']}*\n\n글을 잘 읽었나요? 10문제 시작합니다.\n답변 형식: 객관식은 A/B/C/D, 서술형은 자유롭게")
+send_telegram(f"📝 *퀴즈 시작: {quiz['title']}*\n\n글을 잘 읽었나요? 10문제 시작합니다!\n객관식: 버튼 클릭 | 서술형: 텍스트 입력")
 
-for i, q in enumerate(quiz["questions"], 1):
-    if q["type"] == "multiple":
-        opts = "\n".join(q["options"])
-        send_telegram(f"*Q{i} [{q['difficulty']}] (객관식)*\n{q['q']}\n\n{opts}")
-    else:
-        send_telegram(f"*Q{i} [{q['difficulty']}] (서술형)*\n{q['q']}")
-
-quiz["draft_file"] = DRAFT_FILE
-with open("/tmp/quiz_session.json", "w", encoding="utf-8") as f:
-    json.dump(quiz, f, ensure_ascii=False)
-
-send_telegram("✍️ 답변을 순서대로 보내주세요. (Q1 → Q10)")
+q = quiz["questions"][0]
+if q["type"] == "multiple":
+    buttons = [[{"text": opt.split(".")[0].strip(), "callback_data": json.dumps({"qIndex": 0, "answer": opt.split(".")[0].strip()})}] for opt in q["options"]]
+    send_telegram(f"*Q1 [{q['difficulty']}] (객관식)*\n{q['q']}", reply_markup={"inline_keyboard": buttons})
+else:
+    send_telegram(f"*Q1 [{q['difficulty']}] (서술형)*\n{q['q']}")
