@@ -72,11 +72,16 @@ def send_telegram(text: str, reply_markup=None) -> None:
         json=payload,
     )
 
-send_telegram(f"📝 *퀴즈 시작: {quiz['title']}*\n\n글을 잘 읽었나요? 10문제 시작합니다!\n객관식: 버튼 클릭 | 서술형: 텍스트 입력")
+mc_questions = [q for q in quiz["questions"] if q["type"] == "multiple"]
+mc_text = f"📝 *퀴즈 시작: {quiz['title']}*\n\n"
 
-q = quiz["questions"][0]
-if q["type"] == "multiple":
-    buttons = [[{"text": opt, "callback_data": json.dumps({"qIndex": 0, "answer": opt[0]})}] for opt in q["options"]]
-    send_telegram(f"*Q1 [{q['difficulty']}] (객관식)*\n{q['q']}", reply_markup={"inline_keyboard": buttons})
-else:
-    send_telegram(f"*Q1 [{q['difficulty']}] (서술형)*\n{q['q']}")
+for i, q in enumerate(mc_questions):
+    mc_text += f"*Q{i + 1} [{q['difficulty']}]*\n{q['q']}\n"
+    for opt in q["options"]:
+        mc_text += f"  {opt}\n"
+    mc_text += "\n"
+
+mc_text += "━━━━━━━━━━━━━━\n"
+mc_text += f"📌 *{len(mc_questions)}글자로 답하세요* (예: `ABCDBCA`)"
+
+send_telegram(mc_text)
