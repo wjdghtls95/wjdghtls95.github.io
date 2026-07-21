@@ -44,6 +44,12 @@ response = client.chat.completions.create(
 )
 
 quiz = json.loads(response.choices[0].message.content)
+
+# 객관식 먼저, 서술형 나중으로 정렬
+mc = [q for q in quiz["questions"] if q["type"] == "multiple"]
+essay = [q for q in quiz["questions"] if q["type"] == "essay"]
+quiz["questions"] = mc + essay
+
 quiz["draft_file"] = DRAFT_FILE
 quiz["content"] = content[:2000]
 quiz["user_answers"] = {}
