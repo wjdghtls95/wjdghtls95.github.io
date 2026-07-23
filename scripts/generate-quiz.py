@@ -17,6 +17,11 @@ QUEUE_MAX = 5
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
 
+# frontmatter에서 source 파일 경로 파싱
+import re as _re
+_source_match = _re.search(r'^source:\s*(.+)$', content, _re.MULTILINE)
+SOURCE_FILE = _source_match.group(1).strip() if _source_match else None
+
 # ===== KV Helpers =====
 
 def get_kv(key):
@@ -116,11 +121,11 @@ if not existing_date:
 
 # 퀴즈 예정일 읽기
 quiz_date = get_kv("NEXT_QUIZ_DATE")
-queue_position = len(queue)
+source_line = f"소스: `{SOURCE_FILE}`\n" if SOURCE_FILE else ""
 
 send_telegram(
     f"📥 *퀴즈 등록됐습니다*\n\n"
     f"제목: _{quiz['title']}_\n"
-    f"큐 위치: {queue_position}번째\n"
+    f"{source_line}"
     f"퀴즈 예정: {quiz_date} 18:00 KST"
 )
