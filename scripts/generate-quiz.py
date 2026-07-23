@@ -3,16 +3,19 @@ import json
 import hashlib
 import requests
 from datetime import datetime, timezone, timedelta
-from openai import OpenAI
 
 DRAFT_FILE = os.environ["DRAFT_FILE"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 CF_ACCOUNT_ID = os.environ["CF_ACCOUNT_ID"]
 CF_API_TOKEN = os.environ["CF_API_TOKEN"]
-KV_NAMESPACE_ID = "36dfe08248484462b941e184e6e79c39"
+KV_NAMESPACE_ID = os.environ["KV_NAMESPACE_ID"]
 QUEUE_MAX = 5
+
+# ===== LLM Provider =====
+# LLM_PROVIDER: openai (default) | anthropic | groq | ollama | openai-compatible
+# 각 프로바이더에 맞는 환경변수만 설정하면 됨
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openai")
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
@@ -51,9 +54,7 @@ def send_telegram(text):
 
 # ===== Quiz Generation =====
 
-client = OpenAI(api_key=OPENAI_API_KEY)
-
-prompt = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
+QUIZ_PROMPT_KO = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 
 규칙:
 - 글의 H2 섹션이 여러 개면 각 섹션에서 반드시 1문제 이상 출제
@@ -73,14 +74,64 @@ prompt = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 글 내용:
 {content}"""
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    max_tokens=2000,
-    response_format={"type": "json_object"},
-    messages=[{"role": "user", "content": prompt}],
-)
 
-quiz = json.loads(response.choices[0].message.content)
+def call_llm(prompt: str) -> str:
+    """LLM_PROVIDER에 맞게 퀴즈 생성 요청. 모두 JSON 문자열 반환."""
+
+    if LLM_PROVIDER == "anthropic":
+        import anthropic
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        msg = client.messages.create(
+            model=os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001"),
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text
+
+    elif LLM_PROVIDER == "groq":
+        # Groq은 OpenAI SDK의 base_url만 바꾸면 됨 (무료 한도 있음)
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+        resp = client.chat.completions.create(
+            model=os.environ.get("LLM_MODEL", "llama-3.1-8b-instant"),
+            max_tokens=2000,
+            response_format={"type": "json_object"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+
+    elif LLM_PROVIDER == "openai-compatible":
+        # Ollama, Together AI, OpenRouter 등 OpenAI 호환 엔드포인트
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=os.environ.get("LLM_API_KEY", "ollama"),
+            base_url=os.environ["LLM_BASE_URL"],  # 예: http://localhost:11434/v1
+        )
+        resp = client.chat.completions.create(
+            model=os.environ["LLM_MODEL"],
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
+
+    else:
+        # 기본값: OpenAI
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        resp = client.chat.completions.create(
+            model=os.environ.get("LLM_MODEL", "gpt-4o-mini"),
+            max_tokens=2000,
+            response_format={"type": "json_object"},
+            messages=[{"role": "user", "content": QUIZ_PROMPT_KO}],
+        )
+        return resp.choices[0].message.content
+
+
+quiz_json_str = call_llm(QUIZ_PROMPT_KO)
+quiz = json.loads(quiz_json_str)
 
 # 객관식 먼저, 서술형 나중
 mc = [q for q in quiz["questions"] if q["type"] == "multiple"]
@@ -92,7 +143,6 @@ quiz["userAnswers"] = {}
 
 # ===== Queue Management =====
 
-# 큐 상한 체크
 queue_raw = get_kv("PENDING_QUEUE")
 queue = json.loads(queue_raw) if queue_raw else []
 
@@ -104,22 +154,18 @@ if len(queue) >= QUEUE_MAX:
     )
     raise SystemExit(0)
 
-# 퀴즈 데이터를 고유 키로 저장 (7일 TTL)
 slug = hashlib.md5(DRAFT_FILE.encode()).hexdigest()[:8]
 quiz_key = f"pending_quiz_{slug}"
 put_kv(quiz_key, json.dumps(quiz, ensure_ascii=True), expiration_ttl=7 * 86400)
 
-# 큐에 추가
 queue.append({"file": DRAFT_FILE, "title": quiz["title"], "quizKey": quiz_key})
 put_kv("PENDING_QUEUE", json.dumps(queue, ensure_ascii=True))
 
-# 첫 번째 항목이면 NEXT_QUIZ_DATE를 오늘로 설정
 existing_date = get_kv("NEXT_QUIZ_DATE")
 if not existing_date:
     today_kst = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d")
     put_kv("NEXT_QUIZ_DATE", today_kst)
 
-# 퀴즈 예정일 읽기
 quiz_date = get_kv("NEXT_QUIZ_DATE")
 source_line = f"소스: `{SOURCE_FILE}`\n" if SOURCE_FILE else ""
 
