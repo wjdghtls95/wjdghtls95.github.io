@@ -1,10 +1,9 @@
 ---
 title: "아이언맨 자비스를 만들기로 결심한 이유"
 description: "ChatGPT도 있는데 왜 굳이? JARVIS AI를 만들기까지의 고민"
-pubDate: 2026-07-21
-category: "프로젝트"
-tags: ["JARVIS", "AI", "사이드프로젝트", "개발기"]
-series: "JARVIS 개발기"
+pubDatetime: 2026-07-21T09:00:00Z
+tags: ["JARVIS", "AI", "사이드프로젝트", "개발기", "프로젝트"]
+featured: true
 ---
 
 "아이언맨 자비스 같은 걸 만들고 싶다"는 생각으로 시작했는데, 막상 뭘 만들어야 하는지를 몰랐다
