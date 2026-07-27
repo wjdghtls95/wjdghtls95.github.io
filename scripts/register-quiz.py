@@ -177,10 +177,12 @@ def format_issues(issues):
                 )
             else:
                 action = "→ 이 문장으로 교체" if position == "replace" else "→ 이 문장 뒤에 추가"
+                # 코드블록 포함 시 이탤릭(_..._) 감싸면 Telegram Markdown 충돌 → 그대로 출력
+                insert_text = insert if "```" in insert else f"_{insert}_"
                 block = (
                     f"*{i}.* `{anchor}`\n"
                     f"{action}:\n"
-                    f"_{insert}_"
+                    f"{insert_text}"
                 )
         else:
             block = f"*{i}.* {issue}"
