@@ -1,35 +1,19 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
-import { getRelativeLocaleUrl } from "astro:i18n";
-import { useTranslations } from "@/i18n";
-import config from "@/config";
-
-const locale = Astro.currentLocale ?? config.site.lang;
-const t = useTranslations(locale);
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import BackToPrevious from "@components/BackToPrevious.astro";
+import { SITE } from "@consts";
 ---
 
-<Layout title={`${t.notFound.title} | ${config.site.title}`}>
-  <Header />
-
-  <main
-    id="main-content"
-    class="app-layout flex flex-1 items-center justify-center"
-  >
-    <div class="mb-14 flex flex-col items-center justify-center">
-      <h1 class="text-accent text-9xl font-bold">404</h1>
-      <span aria-hidden="true"> ¯\_(ツ)_/¯ </span>
-      <p class="mt-4 text-2xl sm:text-3xl">{t.notFound.message}</p>
-      <LinkButton
-        href={getRelativeLocaleUrl(locale, "")}
-        class="my-6 text-lg underline decoration-dashed underline-offset-8"
-      >
-        {t.notFound.goHome}
-      </LinkButton>
+<Layout title="404" description={SITE.DESCRIPTION}>
+  <Container>
+    <div class="mt-16 grid place-items-center gap-3">
+      <h4 class="animate text-2xl font-semibold text-black dark:text-white">
+        404: Page not found
+      </h4>
+      <span class="animate">
+        <BackToPrevious href="/">Go to home page</BackToPrevious>
+      </span>
     </div>
-  </main>
-
-  <Footer />
+  </Container>
 </Layout>

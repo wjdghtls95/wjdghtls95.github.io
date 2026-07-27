@@ -17,36 +17,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: draft → posts 이동
+      - name: draft → blog 이동
         run: |
           DRAFT_FILE="${{ github.event.client_payload.draft_file }}"
           FILENAME=$(basename "$DRAFT_FILE")
-          mkdir -p src/content/posts
-          cp "$DRAFT_FILE" "src/content/posts/$FILENAME"
+          mkdir -p src/content/blog
+          cp "$DRAFT_FILE" "src/content/blog/$FILENAME"
           rm "$DRAFT_FILE"
 
       - name: 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/content/posts/ drafts/
+          git add src/content/blog/ drafts/
           git diff --cached --quiet || git commit -m "publish: $(basename ${{ github.event.client_payload.draft_file }} .md)"
           git push
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+          cache: npm
 
       - name: 의존성 설치
-        run: pnpm install
+        run: npm ci
 
       - name: Astro 빌드
-        run: pnpm build
+        run: npm run build
 
       - uses: actions/configure-pages@v5
 
