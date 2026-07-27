@@ -13,9 +13,19 @@ KV_NAMESPACE_ID = os.environ["KV_NAMESPACE_ID"]
 QUEUE_MAX = 5
 
 # ===== LLM Provider =====
-# LLM_PROVIDER: anthropic (기본) | gemini | openai
-# 각 프로바이더에 맞는 환경변수만 설정하면 됨
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER") or "anthropic"
+# LLM_PROVIDER 명시 시 해당 프로바이더 사용
+# 미설정 시 등록된 API 키로 자동 감지: anthropic → gemini → openai 순서
+_explicit = os.environ.get("LLM_PROVIDER")
+if _explicit:
+    LLM_PROVIDER = _explicit
+elif os.environ.get("ANTHROPIC_API_KEY"):
+    LLM_PROVIDER = "anthropic"
+elif os.environ.get("GEMINI_API_KEY"):
+    LLM_PROVIDER = "gemini"
+elif os.environ.get("OPENAI_API_KEY"):
+    LLM_PROVIDER = "openai"
+else:
+    raise RuntimeError("LLM API 키가 하나도 설정되지 않았습니다. ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY 중 하나를 설정하세요.")
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()

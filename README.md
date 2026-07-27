@@ -49,8 +49,8 @@ direct/*.md 파일 push → 퀴즈 없이 바로 발행
 - `GEMINI_API_KEY` — Gemini 사용 시
 - `OPENAI_API_KEY` — OpenAI 사용 시
 
-**선택** (기본값 있음):
-- `LLM_PROVIDER` — 미설정 시 `anthropic` 사용
+**선택** (미설정 시 자동 처리):
+- `LLM_PROVIDER` — 미설정 시 등록된 API 키로 자동 감지 (anthropic → gemini → openai 순)
 - `LLM_MODEL` — 미설정 시 각 프로바이더 기본 모델 사용
 
 ---
