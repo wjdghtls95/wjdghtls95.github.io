@@ -9,11 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,22 +27,3 @@ jobs:
           git add src/content/blog/ drafts/
           git diff --cached --quiet || git commit -m "publish: $(basename ${{ github.event.client_payload.draft_file }} .md)"
           git push
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: 의존성 설치
-        run: npm install
-
-      - name: Astro 빌드
-        run: npm run build
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
-
-      - uses: actions/deploy-pages@v4
-        id: deployment
