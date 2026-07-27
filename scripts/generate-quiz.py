@@ -15,7 +15,7 @@ QUEUE_MAX = 5
 # ===== LLM Provider =====
 # LLM_PROVIDER: openai (default) | anthropic | groq | ollama | openai-compatible
 # 각 프로바이더에 맞는 환경변수만 설정하면 됨
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openai")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
