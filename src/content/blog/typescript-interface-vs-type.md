@@ -115,9 +115,9 @@ NestJS 프로젝트 기준으로 `interfaces/` 폴더에는 `interface`로 정�
 
 ## 알아두면 좋은 것
 
-TypeScript는 구조적 타이핑(Structural Typing)이다. `interface`와 `type` 모두 같은 구조면 서로 호환된다
+TypeScript는 구조적 타이핑(Structural Typing)이다. `interface`와 `type` 모두 같은 구조면 서로 호환된다.
 
-선언 병합은 양날의 검이다. 라이브러리 타입 확장에 유리하지만, 의도치 않게 같은 이름의 `interface`가 두 곳에 선언되면 자동으로 합쳐진다. 이게 싫다면 `type`을 쓰면 중복 선언 자체가 에러가 된다
+선언 병합은 양날의 검이다. 라이브러리 타입 확장에 유리하지만, 의도치 않게 같은 이름의 `interface`가 두 곳에 선언되면 자동으로 합쳐진다. 이게 싫다면 `type`을 쓰면 중복 선언 자체가 에러가 된다.
 
 ---
 
