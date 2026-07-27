@@ -24,5 +24,8 @@ pnpm-debug.log*
 # 개인 발행 큐 (공개 금지)
 blog-queue.md
 
+# 처리된 draft 추적 (로컬 전용)
+.processed-drafts
+
 # jetbrains setting folder
 .idea/
