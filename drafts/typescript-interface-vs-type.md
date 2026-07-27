@@ -126,3 +126,4 @@ TypeScript는 구조적 타이핑(Structural Typing)이다. `interface`와 `type
 ---
 
 `enum`과 `as const`도 타입 정의와 함께 자주 혼동되는데, 이건 다음 포스트에서 다룬다
+
