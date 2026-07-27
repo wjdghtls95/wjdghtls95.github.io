@@ -76,7 +76,9 @@ QUIZ_PROMPT_KO = f"""다음 글을 읽고 퀴즈 10문제를 만들어줘.
 
 
 def call_llm(prompt: str) -> str:
-    """LLM_PROVIDER에 맞게 퀴즈 생성 요청. 모두 JSON 문자열 반환."""
+    """LLM_PROVIDER에 맞게 퀴즈 생성 요청. 모두 JSON 문자열 반환.
+    지원 프로바이더: anthropic (기본) | gemini | openai
+    """
 
     if LLM_PROVIDER == "anthropic":
         import anthropic
@@ -88,34 +90,14 @@ def call_llm(prompt: str) -> str:
         )
         return msg.content[0].text
 
-    elif LLM_PROVIDER == "groq":
-        # Groq은 OpenAI SDK의 base_url만 바꾸면 됨 (무료 한도 있음)
-        from openai import OpenAI
-        client = OpenAI(
-            api_key=os.environ["GROQ_API_KEY"],
-            base_url="https://api.groq.com/openai/v1",
+    elif LLM_PROVIDER == "gemini":
+        from google import genai
+        client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        resp = client.models.generate_content(
+            model=os.environ.get("LLM_MODEL", "gemini-2.0-flash"),
+            contents=prompt,
         )
-        resp = client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL", "llama-3.1-8b-instant"),
-            max_tokens=2000,
-            response_format={"type": "json_object"},
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return resp.choices[0].message.content
-
-    elif LLM_PROVIDER == "openai-compatible":
-        # Ollama, Together AI, OpenRouter 등 OpenAI 호환 엔드포인트
-        from openai import OpenAI
-        client = OpenAI(
-            api_key=os.environ.get("LLM_API_KEY", "ollama"),
-            base_url=os.environ["LLM_BASE_URL"],  # 예: http://localhost:11434/v1
-        )
-        resp = client.chat.completions.create(
-            model=os.environ["LLM_MODEL"],
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return resp.choices[0].message.content
+        return resp.text
 
     else:
         # 기본값: OpenAI
@@ -125,7 +107,7 @@ def call_llm(prompt: str) -> str:
             model=os.environ.get("LLM_MODEL", "gpt-4o-mini"),
             max_tokens=2000,
             response_format={"type": "json_object"},
-            messages=[{"role": "user", "content": QUIZ_PROMPT_KO}],
+            messages=[{"role": "user", "content": prompt}],
         )
         return resp.choices[0].message.content
 

@@ -22,15 +22,13 @@ jobs:
       - name: 퀴즈 생성 및 Telegram 전송
         if: steps.detect.outputs.file != ''
         env:
-          # LLM 설정 — LLM_PROVIDER: openai | anthropic | groq | openai-compatible
+          # LLM 설정 — LLM_PROVIDER: anthropic (기본) | gemini | openai
           LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           # 사용하는 프로바이더의 키만 설정하면 됨
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Telegram
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -40,5 +38,5 @@ jobs:
           KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
           DRAFT_FILE: ${{ steps.detect.outputs.file }}
         run: |
-          pip install openai anthropic requests
+          pip install openai anthropic google-genai requests
           python scripts/generate-quiz.py

@@ -1,63 +1,85 @@
-# Astro Starter Kit: Blog
+# 블로그 + 퀴즈 자동화
 
-```sh
-npm create astro@latest -- --template blog
+Astro Micro 기반 개인 기술 블로그 + Telegram 퀴즈 자동화 시스템.
+
+**블로그**: [wjdghtls95.github.io](https://wjdghtls95.github.io)
+
+---
+
+## 글 발행 방법
+
+### 방법 1 — 퀴즈 심사 후 발행 (`drafts/`)
+
+```
+drafts/*.md 파일 push
+  → LLM이 퀴즈 10문제 생성 → Telegram 전송
+  → 매일 18:00 KST 퀴즈 전송
+  → 통과 → 다음날 08:00 KST 자동 발행
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### 방법 2 — 즉시 발행 (`direct/`)
 
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+```
+direct/*.md 파일 push → 퀴즈 없이 바로 발행
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+---
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## 퀴즈 LLM 설정
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+기본 프로바이더는 **Anthropic**. `LLM_PROVIDER` Secret으로 변경 가능.
 
-Any static assets, like images, can be placed in the `public/` directory.
+### 지원 프로바이더
 
-## 🧞 Commands
+| 프로바이더 | `LLM_PROVIDER` 값 | 필요한 Secret | 기본 모델 |
+|-----------|-----------------|--------------|---------|
+| Anthropic (기본) | `anthropic` | `ANTHROPIC_API_KEY` | `claude-haiku-4-5-20251001` |
+| Google Gemini | `gemini` | `GEMINI_API_KEY` | `gemini-2.0-flash` |
+| OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` |
 
-All commands are run from the root of the project, from a terminal:
+### GitHub Secrets 설정
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+**필수** (공통):
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `KV_NAMESPACE_ID`
 
-## 👀 Want to learn more?
+**LLM 키 (사용하는 프로바이더 것만)**:
+- `ANTHROPIC_API_KEY` — Anthropic 사용 시
+- `GEMINI_API_KEY` — Gemini 사용 시
+- `OPENAI_API_KEY` — OpenAI 사용 시
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+**선택** (기본값 있음):
+- `LLM_PROVIDER` — 미설정 시 `anthropic` 사용
+- `LLM_MODEL` — 미설정 시 각 프로바이더 기본 모델 사용
 
-## Credit
+---
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+## 로컬 개발
+
+```bash
+npm install
+npm run dev       # localhost:4321
+npm run build
+npm run preview
+```
+
+---
+
+## 프로젝트 구조
+
+```
+drafts/       ← 퀴즈 심사 대기 글 (push 시 파이프라인 트리거)
+direct/       ← 즉시 발행 글
+src/
+  content/
+    blog/     ← 발행된 글
+    projects/ ← 프로젝트 목록
+scripts/
+  generate-quiz.py  ← LLM 퀴즈 생성 + Cloudflare KV 등록
+.github/workflows/
+  quiz-pipeline.yml   ← drafts push → 퀴즈 생성
+  publish.yml         ← 퀴즈 통과 후 자동 발행
+  direct-publish.yml  ← direct push → 즉시 발행
+  deploy.yml          ← GitHub Pages 배포
+```
