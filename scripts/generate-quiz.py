@@ -13,7 +13,7 @@ KV_NAMESPACE_ID = os.environ["KV_NAMESPACE_ID"]
 QUEUE_MAX = 5
 
 # ===== LLM Provider =====
-# LLM_PROVIDER: openai (default) | anthropic | groq | ollama | openai-compatible
+# LLM_PROVIDER: anthropic (기본) | gemini | openai
 # 각 프로바이더에 맞는 환경변수만 설정하면 됨
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 
@@ -112,7 +112,13 @@ def call_llm(prompt: str) -> str:
         return resp.choices[0].message.content
 
 
-quiz_json_str = call_llm(QUIZ_PROMPT_KO)
+def extract_json(text: str) -> str:
+    """LLM이 JSON을 마크다운 코드블록으로 감쌌을 경우 안쪽만 추출."""
+    import re
+    match = re.search(r'```(?:json)?\s*([\s\S]+?)\s*```', text)
+    return match.group(1) if match else text.strip()
+
+quiz_json_str = extract_json(call_llm(QUIZ_PROMPT_KO))
 quiz = json.loads(quiz_json_str)
 
 # 객관식 먼저, 서술형 나중
