@@ -15,7 +15,7 @@ QUEUE_MAX = 5
 # ===== LLM Provider =====
 # LLM_PROVIDER: anthropic (기본) | gemini | openai
 # 각 프로바이더에 맞는 환경변수만 설정하면 됨
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER") or "anthropic"
 
 with open(DRAFT_FILE, "r", encoding="utf-8") as f:
     content = f.read()
@@ -84,7 +84,7 @@ def call_llm(prompt: str) -> str:
         import anthropic
         client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         msg = client.messages.create(
-            model=os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001"),
+            model=os.environ.get("LLM_MODEL") or "claude-haiku-4-5-20251001",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -94,7 +94,7 @@ def call_llm(prompt: str) -> str:
         from google import genai
         client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         resp = client.models.generate_content(
-            model=os.environ.get("LLM_MODEL", "gemini-2.0-flash"),
+            model=os.environ.get("LLM_MODEL") or "gemini-2.0-flash",
             contents=prompt,
         )
         return resp.text
@@ -104,7 +104,7 @@ def call_llm(prompt: str) -> str:
         from openai import OpenAI
         client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         resp = client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL", "gpt-4o-mini"),
+            model=os.environ.get("LLM_MODEL") or "gpt-4o-mini",
             max_tokens=2000,
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}],
