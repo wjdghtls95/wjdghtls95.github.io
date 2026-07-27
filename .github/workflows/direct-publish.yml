@@ -18,7 +18,7 @@ jobs:
 
       - name: 새로 추가된 direct 파일 감지, 이동 및 삭제
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'direct/*.md' 'direct/*.mdx')
+          CHANGED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'direct/*.md' 'direct/*.mdx')
           for FILE in $CHANGED; do
             FILENAME=$(basename "$FILE")
             cp "$FILE" "src/content/blog/$FILENAME"
