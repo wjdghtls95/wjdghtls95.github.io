@@ -35,6 +35,10 @@ import re as _re
 _source_match = _re.search(r'^source:\s*(.+)$', content, _re.MULTILINE)
 SOURCE_FILE = _source_match.group(1).strip() if _source_match else None
 
+# 학습 위치 (옵시디언 파일 경로 또는 제목)
+_study_match = _re.search(r'^study:\s*(.+)$', content, _re.MULTILINE)
+STUDY_REF = _study_match.group(1).strip() if _study_match else None
+
 # ===== KV Helpers =====
 
 def get_kv(key):
@@ -49,12 +53,14 @@ def put_kv(key, value_str, expiration_ttl=None):
     params = {}
     if expiration_ttl:
         params["expiration_ttl"] = expiration_ttl
-    requests.put(
+    resp = requests.put(
         url,
         headers={"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "text/plain"},
         params=params,
         data=value_str.encode("utf-8"),
     )
+    if not resp.ok:
+        raise RuntimeError(f"KV 저장 실패 [{key}]: {resp.status_code} {resp.text}")
 
 def send_telegram(text):
     requests.post(
@@ -166,10 +172,12 @@ if not existing_date:
 
 quiz_date = get_kv("NEXT_QUIZ_DATE")
 source_line = f"소스: `{SOURCE_FILE}`\n" if SOURCE_FILE else ""
+study_line = f"📚 공부할 곳: `{STUDY_REF}`\n" if STUDY_REF else ""
 
 send_telegram(
     f"📥 *퀴즈 등록됐습니다*\n\n"
     f"제목: _{quiz['title']}_\n"
     f"{source_line}"
+    f"{study_line}"
     f"퀴즈 예정: {quiz_date} 18:00 KST"
 )
