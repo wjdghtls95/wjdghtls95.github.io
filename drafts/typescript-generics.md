@@ -4,24 +4,14 @@ description: "TypeScript generics — 제대로 이해하기"
 date: "2026-07-28"
 tags: ["learning"]
 study: "학습/TypeScript/generics.md"
+rewritten: true
 ---
 
-# Generics
-_Updated: 2026-06-24_
-
----
-
-> [!note]- 용어 정리
-> - **타입 파라미터(Type Parameter)**: `<T>` 처럼 타입을 변수처럼 받는 것. 관례상 T, U, K, V 사용
-> - **타입 추론(Type Inference)**: 함수 호출 시 인수에서 T를 자동으로 파악하는 것
-> - **타입 제약(Type Constraint)**: `T extends { id: string }` 처럼 T가 만족해야 할 조건
-> - **keyof**: 객체 타입의 모든 키를 유니온으로 반환하는 연산자
-
----
+같은 로직인데 타입만 달라서 함수를 여러 개 만들어야 할 때가 있다. `getStringFirst`, `getNumberFirst`... 이걸 하나로 묶는 게 제네릭이다.
 
 ## 기본 개념
 
-타입을 파라미터처럼 받아서 재사용 가능한 타입/함수/클래스를 만든다
+타입을 파라미터처럼 받는다. `<T>`에서 T는 타입 변수 — 관례상 T, U, K, V를 쓴다.
 
 ```ts
 function identity<T>(arg: T): T {
@@ -33,7 +23,7 @@ identity('hello');         // T = string, 추론
 identity(42);              // T = number, 추론
 ```
 
----
+대부분의 경우 TypeScript가 인수에서 T를 알아서 추론한다. `<string>`을 직접 쓸 일은 거의 없다.
 
 ## 함수 제네릭
 
@@ -43,15 +33,17 @@ function first<T>(arr: T[]): T | undefined {
   return arr[0];
 }
 
-// ✅ 두 값 교환
+// ✅ 두 값 교환 — 타입이 다를 수 있으니 T, U 둘 다 받음
 function swap<T, U>(a: T, b: U): [U, T] {
   return [b, a];
 }
 ```
 
----
+반환 타입을 `T`로 고정하면 `any`와 달리 호출 시 타입 정보가 보존된다.
 
 ## 인터페이스/타입 제네릭
+
+형태는 같고 데이터 타입만 다른 구조에 유용하다.
 
 ```ts
 // ✅ 페이지네이션 응답
@@ -66,127 +58,116 @@ type UserPage = PaginatedResult<User>;
 type ConversationPage = PaginatedResult<Conversation>;
 ```
 
----
+API 응답, 이벤트 페이로드처럼 반복되는 래퍼 구조에 자주 쓰인다.
 
 ## 타입 제약 (extends)
 
-T가 특정 타입을 만족해야 한다는 제약
+T를 완전히 열어두면 `item.id` 같은 속성 접근이 불가능하다. `extends`로 T가 만족해야 할 조건을 지정한다.
 
 ```ts
-// T는 반드시 { id: string }을 가져야 함
+// ✅ T는 반드시 { id: string }을 가져야 함
 function findById<T extends { id: string }>(items: T[], id: string): T | undefined {
   return items.find(item => item.id === id);
 }
 
-findById(users, '123');         // ✅ User는 id: string 보유
-getProperty(user, 'xyz');       // ❌ 'xyz'는 User의 키가 아님 — 컴파일 에러
+findById(users, '123'); // ✅ User는 id: string 보유
 ```
 
+`keyof`와 조합하면 객체의 키를 타입 안전하게 다룰 수 있다.
+
 ```ts
-// K는 T의 키여야 함
+// ✅ K는 T의 키여야 함
 function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
   return obj[key];
 }
 
 const user: User = { id: '1', email: 'a@b.com', name: 'John' };
 getProperty(user, 'email'); // ✅ string
+getProperty(user, 'xyz');   // ❌ 컴파일 에러 — 'xyz'는 User의 키가 아님
 ```
 
----
-
-## JARVIS AI에서 실제 사용
-
-### BaseRepository — 제네릭 Repository 패턴
-
-`apps/server/libs/common/repositories/base.repository.ts`에서 제네릭을 활용한다
+`K extends keyof T` 패턴은 TypeScript 내장 유틸리티 타입인 `Pick`에서도 같은 방식으로 쓰인다.
 
 ```ts
-// TransactionHost가 제네릭 타입을 받음
-type PrismaTransactionHost = TransactionHost<TransactionalAdapterPrisma<DatabaseService>>;
+// Pick 내부 구현
+type Pick<T, K extends keyof T> = { [P in K]: T[P]; };
 
-export abstract class BaseRepository {
-  constructor(protected readonly txHost: PrismaTransactionHost) {}
+// 실무 예시
+conversationHistory: Pick<Message, 'role' | 'content'>[];
+```
 
-  protected get db() {
-    return this.txHost.tx;
-  }
+## 기본값 (Default Type Parameter)
+
+T에 기본 타입을 지정할 수 있다.
+
+```ts
+interface Repository<T = unknown> {
+  findAll(): Promise<T[]>;
 }
+
+const repo: Repository = ...;           // Repository<unknown>
+const userRepo: Repository<User> = ...; // Repository<User>
 ```
 
-각 도메인 Repository가 이를 상속:
+타입 파라미터를 선택적으로 받아야 하는 공통 인터페이스 설계에 유용하다.
+
+## 실무 패턴 — 제네릭 Repository
+
+도메인별로 같은 CRUD 구조를 반복하지 않기 위해 제네릭 추상 클래스를 쓴다.
 
 ```ts
-// apps/server/src/user/repositories/user.repository.ts
-@Injectable()
-export class UserRepository extends BaseRepository {
-  constructor(txHost: PrismaTransactionHost) {
-    super(txHost);
-  }
+// ✅ 제네릭 기반 추상 Repository
+abstract class BaseRepository<T, ID = string> {
+  abstract findById(id: ID): Promise<T | null>;
+  abstract findAll(): Promise<T[]>;
+  abstract save(entity: T): Promise<T>;
+}
 
+// ✅ 각 도메인이 타입만 지정해서 상속
+class UserRepository extends BaseRepository<User> {
   async findById(id: string): Promise<User | null> {
     return this.db.user.findUnique({ where: { id } });
   }
 }
 ```
 
-### Pick 타입 + 제네릭 응용
-
-inference 클라이언트에서 Message 타입의 일부만 전달:
-
-```ts
-// apps/server/src/inference/inference.client.ts
-conversationHistory: Pick<Message, 'role' | 'content'>[];
-```
-
-`Pick<T, K extends keyof T>`의 K가 제네릭 제약을 사용하는 패턴
-
----
-
-## 기본값 (Default Type Parameter)
-
-```ts
-// T 기본값 지정
-interface Repository<T = unknown> {
-  findAll(): Promise<T[]>;
-}
-
-const repo: Repository = ...;      // Repository<unknown>
-const userRepo: Repository<User> = ...; // Repository<User>
-```
-
----
+공통 로직은 `BaseRepository`에 두고, 타입별 구현만 서브클래스에서 담당한다.
 
 ## Anti-patterns
+
+제네릭이 유용한 건 타입 정보를 유지하면서 재사용성을 높일 때다. 그 목적에 맞지 않으면 쓰지 않는 게 낫다.
 
 ```ts
 // ❌ 불필요한 제네릭 — 타입이 항상 string이면 그냥 string
 function logString<T extends string>(msg: T): void {
   console.log(msg);
 }
-// → function log(msg: string): void
+// ✅
+function log(msg: string): void {
+  console.log(msg);
+}
 
 // ❌ 반환 타입에 any 사용
 function process<T>(data: T): any { ... }
-// → 반환 타입도 T나 구체적인 타입으로
+// ✅ 반환 타입도 T나 구체적인 타입으로
 
-// ❌ 타입 파라미터 3개 초과
+// ❌ 타입 파라미터 3개 초과 — 읽기가 어려워짐
 function combine<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D] { ... }
-// → 객체로 받는 게 더 명확
+// ✅ 객체로 받는 게 더 명확
 ```
 
----
+## 주의할 점
+```ts
+// ❌ T extends any — 제약 없음, any의 위험성 그대로 유입
+function wrap<T extends any>(val: T): void {
+(val as any).doesNotExist(); // 컴파일러 통과, 런타임 에러 가능
+}
 
-## Gotcha
+// ✅ T extends unknown — 제약 없음을 안전하게 표현, 직접 조작 불가
+function wrap<T extends unknown>(val: T): void {
+// unknown이므로 타입 좁히기 없이 val 조작 불가 → 실수 방지
+}
 
-- `T extends any` 는 사실상 제약이 없는 것 — `unknown`이 더 안전
-- 클래스 제네릭에서 `new (this as any)()` 패턴은 타입 정보를 잃음 — 실제 JARVIS AI 코드는 `BaseResponseDto.of()` 패턴을 더 명시적으로 작성
-- `Record<K, V>` 는 내부적으로 `{ [P in K]: V }` Mapped Type — [[mapped-types]] 참조
-
----
-
-## 관련 개념
-
-- [[conditional-types]] — T extends U ? X : Y 패턴
-- [[mapped-types]] — [K in keyof T] 패턴
-- [[utility-types]] — 내장 유틸리티 타입들
-- [[interface-vs-type]] — 제네릭과 함께 쓰는 interface
+// ✅ 제약이 없을 땐 그냥 T
+function wrap<T>(val: T): void { ... }
+```
