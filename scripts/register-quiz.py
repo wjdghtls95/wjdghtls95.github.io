@@ -153,6 +153,17 @@ def sort_queue(queue, last):
 
 # ===== Format =====
 
+def mark_as_processed(draft_file):
+    """중복 방지 — 이미 있으면 skip."""
+    path = os.path.join(BLOG_DIR, '.processed-drafts')
+    if os.path.exists(path):
+        with open(path) as f:
+            if draft_file in f.read().splitlines():
+                return
+    with open(path, 'a') as f:
+        f.write(draft_file + '\n')
+
+
 def format_review(points):
     return "\n".join(f"  - {p}" for p in points) if points else "  - 이상 없음"
 
@@ -175,10 +186,22 @@ def format_issues(issues):
                     f"_{what}_\n"
                     f"{insert}"
                 )
+            elif issue_type == "opinion":
+                block = (
+                    f"*{i}.* 💬 *의견/경험 추가 제안*\n"
+                    f"`{anchor}` 뒤에\n"
+                    f"_{what}_"
+                )
+            elif issue_type == "opinion_fix":
+                block = (
+                    f"*{i}.* 💬 *의견 어색함*\n"
+                    f"`{anchor}`\n"
+                    f"_{what}_"
+                )
             else:
                 action = "→ 이 문장으로 교체" if position == "replace" else "→ 이 문장 뒤에 추가"
                 # 코드블록 포함 시 이탤릭(_..._) 감싸면 Telegram Markdown 충돌 → 그대로 출력
-                insert_text = insert if "```" in insert else f"_{insert}_"
+                insert_text = insert if insert and "```" in insert else f"_{insert}_" if insert else ""
                 block = (
                     f"*{i}.* `{anchor}`\n"
                     f"{action}:\n"
@@ -232,9 +255,7 @@ def register_to_queue(result, draft_file, meta):
 
     quiz_date = get_kv("NEXT_QUIZ_DATE")
 
-    # .processed-drafts 업데이트
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(draft_file + '\n')
+    mark_as_processed(draft_file)
 
     try:
         put_kv("LAST_ERROR", json.dumps({"time": None, "message": None}, ensure_ascii=False))
@@ -342,8 +363,7 @@ if meta["category"] == "devlog":
         f"✅ *검수 통과*\n{review_text}\n\n"
         f"`direct/` 폴더로 이동 후 push하면 바로 발행됩니다"
     )
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(DRAFT_FILE + '\n')
+    mark_as_processed(DRAFT_FILE)
     sys.exit(0)
 
 # ── 개선 제안 있음 → 인라인 버튼 ──
@@ -372,8 +392,7 @@ if issues:
         reply_markup=reply_markup,
     )
     # 재처리 방지 — "수정할게요" 클릭 시 Worker가 REVISION_LIST에 추가해 다음 cron에서 제거
-    with open(os.path.join(BLOG_DIR, '.processed-drafts'), 'a') as f:
-        f.write(DRAFT_FILE + '\n')
+    mark_as_processed(DRAFT_FILE)
     print(f"개선 제안 — 버튼 응답 대기 중: {result['title']}")
     sys.exit(0)
 
