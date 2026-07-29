@@ -60,6 +60,30 @@ type ConversationPage = PaginatedResult<Conversation>;
 
 API 응답, 이벤트 페이로드처럼 반복되는 래퍼 구조에 자주 쓰인다.
 
+## 클래스 제네릭
+
+클래스도 같은 방식으로 타입 파라미터를 받는다.
+
+```ts
+class Stack<T> {
+  private items: T[] = [];
+
+  push(item: T): void {
+    this.items.push(item);
+  }
+
+  pop(): T | undefined {
+    return this.items.pop();
+  }
+}
+
+const numStack = new Stack<number>();
+numStack.push(1);
+const val = numStack.pop(); // number | undefined
+```
+
+타입 파라미터는 클래스 전체에서 사용할 수 있다. 컨테이너나 서비스 클래스를 타입 안전하게 만들 때 자주 쓰는 구조다.
+
 ## 타입 제약 (extends)
 
 T를 완전히 열어두면 `item.id` 같은 속성 접근이 불가능하다. `extends`로 T가 만족해야 할 조건을 지정한다.
