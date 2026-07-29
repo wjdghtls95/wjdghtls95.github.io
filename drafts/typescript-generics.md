@@ -1,6 +1,6 @@
 ---
 title: "TypeScript generics — 제대로 이해하기"
-description: "TypeScript generics — 제대로 이해하기"
+description: "타입 파라미터로 반복 코드를 줄이는 제네릭의 기본 개념부터 keyof 제약, 실무 Repository 패턴까지"
 date: "2026-07-28"
 tags: ["learning"]
 study: "학습/TypeScript/generics.md"
@@ -158,7 +158,8 @@ function combine<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D] { ... }
 
 ## 주의할 점
 ```ts
-// ❌ T extends any — 제약 없음, any의 위험성 그대로 유입
+// ❌ T extends any — 모든 타입이 any를 extends하므로 제약이 없는 것과 동일, 코드 스멜
+// 더 큰 문제: 이 안에서 as any를 쓰면 T의 타입 보호가 완전히 무너짐
 function wrap<T extends any>(val: T): void {
 (val as any).doesNotExist(); // 컴파일러 통과, 런타임 에러 가능
 }
