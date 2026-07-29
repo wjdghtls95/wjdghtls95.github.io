@@ -208,7 +208,6 @@ PROMPT_EOF
     if [ $? -ne 0 ]; then
       send_error "register-quiz.py 실패 (파일: $file) — /tmp/blog-cron.log 확인"
     fi
-    break
   fi
 done
 
