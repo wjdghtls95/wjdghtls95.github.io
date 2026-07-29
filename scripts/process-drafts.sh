@@ -4,10 +4,14 @@
 BLOG_DIR="/Users/junghoshin/Documents/projects/wjdghtls95.github.io"
 PROCESSED="$BLOG_DIR/.processed-drafts"
 
-# 동시 실행 방지 — launchd + fswatch가 겹칠 경우 두 번째 실행 즉시 종료
+# 동시 실행 방지 — launchd + fswatch가 겹칠 경우 두 번째 실행 즉시 종료 (macOS: PID 방식)
 LOCK_FILE="/tmp/blog-process.lock"
-exec 9>"$LOCK_FILE"
-flock -n 9 || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 이미 실행 중 — 건너뜀"; exit 0; }
+if [ -f "$LOCK_FILE" ] && kill -0 "$(cat "$LOCK_FILE")" 2>/dev/null; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] 이미 실행 중 (PID: $(cat "$LOCK_FILE")) — 건너뜀"
+  exit 0
+fi
+echo $$ > "$LOCK_FILE"
+trap 'rm -f "$LOCK_FILE"' EXIT
 
 # .env 로드 (Telegram 에러 알림용)
 if [ -f "$BLOG_DIR/.env" ]; then
