@@ -153,27 +153,38 @@ frontmatter에 \`rewritten: true\`가 있으면 이 단계를 완전히 건너�
   "study": "frontmatter의 study 값 (없으면 null)",
   "category": "learning 또는 project 또는 devlog",
   "questions": [
-    객관식일 때:
     {
       "type": "multiple",
       "difficulty": "easy 또는 medium 또는 hard",
       "q": "질문",
       "options": ["A. 선택지", "B. 선택지", "C. 선택지", "D. 선택지"],
       "answer": "A",
-      "section": "해당 H2 섹션 제목"
-    }
-    서술형일 때:
-    {
-      "type": "essay",
-      "difficulty": "medium 또는 hard",
-      "q": "질문",
-      "modelAnswer": "모범 답안 — 핵심 개념을 2~3문장으로 정리",
+      "explanation": "정답이 A인 이유를 1~2문장으로 — 틀린 선택지가 왜 틀렸는지 포함",
       "section": "해당 H2 섹션 제목"
     }
   ]
   devlog는 questions: []
 }
-issues 없으면 빈 배열 []. 검수 실패 시 passed: false, questions: []
+issues 없으면 빈 배열 []. 검수 실패 시 passed: false여도 questions는 반드시 생성 (devlog 제외). questions: []는 devlog만.
+
+**퀴즈 품질 기준 (반드시 지킬 것):**
+
+모든 문제는 객관식(type: "multiple")만. 서술형 금지.
+
+목표: 개념을 이해하고 코드에 적용할 수 있는가를 체크하는 것.
+암기나 사실 확인이 목적이 아니다.
+
+절대 금지 문제 유형:
+- 버전/연도 ("TypeScript X.Y에서 추가된", "2023년에 도입된")
+- 정의 암기 ("~의 정의로 올바른 것은?", "~란 무엇인가?")
+- 이름 맞추기 ("이 연산자의 이름은?", "이 패턴의 공식 명칭은?")
+- 공식 문서 발췌 ("공식 문서에 따르면")
+
+좋은 문제의 기준:
+- 인라인 코드로 짧은 스니펫을 주고 "이 코드의 결과/타입은?" → 이해하면 풀 수 있음
+- 두 패턴의 차이를 묻는 것 → 실제로 써봐야 아는 것
+- "언제 A 대신 B를 써야 하는가?" → 판단력을 체크하는 것
+- 잘못된 코드를 주고 "무엇이 문제인가?" → 실전 디버깅 능력
 PROMPT_EOF
 
     unset NODE_OPTIONS && /opt/homebrew/bin/claude --allowedTools "Read,Write" -p "$(cat "$PROMPT_FILE")"
