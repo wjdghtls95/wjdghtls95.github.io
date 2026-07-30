@@ -69,6 +69,7 @@ part: 1                              # 선택 — series와 함께 사용
 | 명령어 | 기능 |
 |--------|------|
 | `/start` | 봇 상태 및 큐 확인 |
+| `/status` `/상태` | 큐·퀴즈·에러 전체 현황 |
 | `/quiz` | 퀴즈 즉시 시작 |
 | `/queue` | 대기 목록 확인 |
 | `/먼저 N` | 큐 순서 변경 (예: `/먼저 2`) |
@@ -119,13 +120,25 @@ TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 ```
 
-### crontab 설정
+### launchd 설정 (macOS)
+
+`process-drafts.sh`는 launchd로 매일 7:30 AM에 자동 실행됩니다.
 
 ```bash
-crontab -e
-# 추가:
-30 7 * * * /bin/bash /절대경로/scripts/process-drafts.sh >> /tmp/blog-cron.log 2>&1
+# 최초 1회 등록
+cp com.jarvis.blog-process.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.jarvis.blog-process.plist
 ```
+
+`watch-drafts.sh`를 켜두면 drafts/에 파일 저장 시 즉시 처리됩니다 (launchd 시간 기다릴 필요 없음):
+
+```bash
+blog-watch-on    # fswatch 데몬 시작
+blog-watch-off   # 종료
+blog-watch-status  # 실행 중인지 확인
+```
+
+> `blog-watch-*` 별칭은 `~/.zshrc`에 등록되어 있습니다.
 
 ### 퀴즈봇 (Cloudflare Worker)
 
