@@ -1,6 +1,8 @@
 #!/bin/bash
 # 매일 7:00 AM KST — blog-queue.md 백로그에서 다음 파일을 Obsidian에서 drafts/로 복사
 # process-drafts.sh가 7:30 AM에 실행되므로 30분 여유
+# cron에서 실행 시 PATH가 제한적이므로 필수 바이너리 명시
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 BLOG_DIR="/Users/junghoshin/Documents/projects/wjdghtls95.github.io"
 OBSIDIAN_LEARNING="/Users/junghoshin/Documents/Obsidian Vault/학습"

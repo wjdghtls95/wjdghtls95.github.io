@@ -1,5 +1,7 @@
 #!/bin/bash
 # 매일 7:30 AM KST — drafts/ 새 파일 감지 + Claude Code로 검수/퀴즈 생성
+# cron에서 실행 시 PATH가 제한적이므로 필수 바이너리 명시
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 BLOG_DIR="/Users/junghoshin/Documents/projects/wjdghtls95.github.io"
 PROCESSED="$BLOG_DIR/.processed-drafts"
