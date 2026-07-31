@@ -1,35 +1,27 @@
 ---
 title: "async generator — 비동기 스트림 다루기"
-description: "async generator — 비동기 스트림 다루기"
+description: "yield로 값을 하나씩 내보내는 async generator와 for await...of의 동작 원리, 그리고 SSE 스트리밍에서 실제로 쓰이는 방식"
 date: "2026-07-31"
 tags: ["learning"]
 study: "학습/TypeScript/async-generator.md"
+rewritten: true
 ---
 
-# Async Generator & for await...of
-_Updated: 2026-06-24_
+AI 채팅 응답을 스트리밍으로 받아본 적 있다면, 그 뒤에는 async generator가 있다.
 
----
-
-> [!note]- 용어 정리
-> - **Generator**: `function*` 문법으로 만든 함수. `yield`로 값을 하나씩 내보내고 일시 중단됨
-> - **AsyncGenerator**: `async function*` 문법. yield한 값이 Promise로 감싸짐
-> - **AsyncIterable**: `Symbol.asyncIterator`를 구현한 객체 — `for await...of`로 순회 가능
-> - **for await...of**: AsyncIterable/AsyncGenerator를 순서대로 소비하는 ES2018 문법
-
----
+Claude API든 OpenAI든 스트리밍 응답은 전부 SSE(Server-Sent Events) 청크를 하나씩 보내는 방식이다. 서버에서 이 청크들을 받아서 클라이언트로 다시 흘려보낼 때 `async function*`이 핵심 도구가 된다.
 
 ## 왜 필요한가
 
-- 일반 `return`은 값을 한 번에 다 돌려줌 — 스트리밍 불가
-- `for...of`는 동기 Iterable만 순회 — 비동기 스트림을 처리 못 함
-- `for await...of` + `async function*`을 조합하면 **값을 하나씩 생산 → 소비**하는 비동기 파이프라인 구성 가능
+일반 `return`은 한 번에 값을 다 돌려준다. 스트리밍이 안 된다.
 
----
+`for...of`는 동기 Iterable만 순회한다. `Promise`가 섞인 비동기 스트림을 처리하면 타입 에러가 난다.
 
-## 핵심 원리
+`async function*` + `for await...of`를 조합하면 **값을 하나씩 생산 → 소비**하는 비동기 파이프라인을 만들 수 있다. 각 `yield`마다 일시 중단되고, 소비자가 처리를 마치면 재개된다.
 
-```
+## 핵심 동작
+
+```ts
 async function* generator() {
   yield '첫 번째'   // 여기서 일시 중단, 첫 번째 값 반환
   yield '두 번째'   // 재개, 두 번째 값 반환
@@ -41,53 +33,22 @@ for await (const value of generator()) {
 }
 ```
 
-- `yield`할 때마다 generator가 일시 중단 → caller가 값 처리 → generator 재개
-- `for await`는 각 yield를 `await`로 기다림 → 순서 보장
+`yield`마다 generator가 멈추고, `for await`가 값을 받아 처리한 뒤 다음 `yield`로 넘어간다. 순서가 보장된다.
 
----
-
-## 일반 for...of와 차이
+## for...of와 for await...of 차이
 
 | | `for...of` | `for await...of` |
 |---|---|---|
 | 대상 | `Iterable<T>` (배열, Set, Map) | `AsyncIterable<T>` / `AsyncGenerator<T>` |
 | 값 처리 | 동기 | 각 값마다 `await` |
-| 문법 | `for (const x of iter)` | `for await (const x of iter)` |
 | 잘못 쓰면 | — | TypeScript 컴파일 에러 |
 
----
+`AsyncGenerator`에 `for...of`를 쓰면 TypeScript가 "이건 Iterable이 아니야"라고 에러를 낸다.
 
-## JARVIS AI 실제 코드
-
-### SSE 스트리밍 소비
-
-`apps/server/src/message/message.service.ts` — `streamMessage()`
+## 선언 방법 3가지
 
 ```ts
-// inferenceClient.streamChat()이 AsyncGenerator<string>을 반환
-const round1Stream = this.inferenceClient.streamChat(basePayload);
-
-for await (const rawLine of round1Stream) {
-  // rawLine = 'data: {"type":"text_delta","text":"안녕"}\n\n'
-  if (rawLine.trim().replace(/^data:\s*/, '') === '[DONE]') {
-    completed = true;
-    break;
-  }
-  // ...
-  yield rawLine; // 이 함수 자체도 async generator라서 yield 가능
-}
-```
-
-- `streamMessage()` 자체가 `async *` — Controller가 `for await`로 소비
-- `inferenceClient.streamChat()` — inference 서버에서 SSE 청크를 하나씩 yield
-- **중첩 generator 파이프라인**: inference → messageService → controller → client
-
----
-
-## async function* 선언 방법
-
-```ts
-// 1. 독립 함수
+// ✅ 독립 함수
 async function* streamNumbers() {
   for (let i = 0; i < 5; i++) {
     await delay(100);
@@ -95,7 +56,7 @@ async function* streamNumbers() {
   }
 }
 
-// 2. 클래스 메서드 (NestJS SSE 패턴)
+// ✅ 클래스 메서드 (NestJS 패턴)
 @Injectable()
 class MessageService {
   async *streamMessage(...): AsyncGenerator<string> {
@@ -104,25 +65,48 @@ class MessageService {
   }
 }
 
-// 3. 반환 타입 명시
+// ✅ 반환 타입 명시
 async function* gen(): AsyncGenerator<number, void, unknown> { ... }
 //                                   값 타입   return 타입  next() 인수 타입
 ```
 
----
+## JARVIS에서 실제로 쓰는 방식
 
-## Gotcha
+JARVIS AI 서버(`apps/server/src/message/message.service.ts`)의 `streamMessage()`는 그 자체가 async generator다.
 
-- **일반 `return`과 혼용 불가**: `return value`는 generator를 종료시킴. `finally` 블록은 여전히 실행됨
-  - JARVIS AI: `streamMessage()`의 `finally`가 DB 정리 담당 — generator가 어디서 끝나도 실행됨
-- **`for await` 없이 `for...of` 쓰면**: TypeScript가 `AsyncGenerator`는 `Iterable`이 아니라고 에러
-- **break하면 generator 종료**: `return()` 메서드가 내부적으로 호출됨 — finally가 실행되고 generator 정리됨
-- **에러 처리**: generator 내부에서 throw되면 for await 루프 밖으로 전파됨 → 호출자가 try/catch해야 함
+```ts
+const round1Stream = this.inferenceClient.streamChat(basePayload);
 
----
+for await (const rawLine of round1Stream) {
+  if (rawLine.trim().replace(/^data:\s*/, '') === '[DONE]') {
+    completed = true;
+    break;
+  }
+  yield rawLine; // 이 함수도 async generator라서 yield 가능
+}
+```
 
-## 관련 개념
+`inferenceClient.streamChat()`이 Claude API SSE 청크를 하나씩 yield하고, `streamMessage()`가 그걸 받아서 다시 yield한다. Controller가 그걸 받아서 클라이언트로 보낸다.
 
-- TypeScript/generics — `AsyncGenerator<T>`의 T
-- NestJS/SSE — Server-Sent Events — NestJS에서 SSE 스트리밍 파이프라인
-- Python/Python 비동기 — AsyncIO — Python의 `async for` + `AsyncGenerator` 대응 개념
+**중첩 파이프라인**: inference 서버 → `inferenceClient` → `messageService` → Controller → 브라우저
+
+각 레이어가 async generator를 받아서 처리하고 다시 yield하는 구조다. 실제로 이렇게 쓰고 나면 "왜 async generator가 필요한가"가 바로 이해된다.
+
+## 주의할 점
+
+**`return value`는 generator를 종료**시킨다. `yield value`가 아니면 스트리밍이 그 시점에 끝난다.
+
+**`finally`는 항상 실행**된다. `break`로 루프를 탈출하거나, 예외가 던져지거나, generator가 끝까지 소비되거나 — 어떤 경우든 `finally`가 실행된다. JARVIS의 `streamMessage()`에서 `finally`가 DB 저장과 대화 제목 생성을 담당하는 이유다. generator가 어디서 끊겨도 정리가 된다.
+
+**에러 처리**: generator 내부에서 throw가 나면 `for await` 루프 밖으로 전파된다. 호출자가 `try/catch`로 잡아야 한다.
+
+```ts
+// ✅ 에러가 for await 밖으로 전파됨
+try {
+  for await (const chunk of streamMessage()) {
+    // ...
+  }
+} catch (e) {
+  // generator 내부 에러가 여기로 옴
+}
+```
