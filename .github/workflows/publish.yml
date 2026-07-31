@@ -13,25 +13,35 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: draft → blog 이동
+        id: move
         run: |
           DRAFT_FILE="${{ github.event.client_payload.draft_file }}"
           FILENAME=$(basename "$DRAFT_FILE")
+          SLUG="${FILENAME%.md}"
+          echo "slug=$SLUG" >> $GITHUB_OUTPUT
+
+          if [ ! -f "$DRAFT_FILE" ]; then
+            echo "error=draft 파일 없음: $DRAFT_FILE" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
           mkdir -p src/content/blog
           cp "$DRAFT_FILE" "src/content/blog/$FILENAME"
           rm "$DRAFT_FILE"
 
       - name: 커밋 및 푸시
+        id: push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/content/blog/ drafts/
-          git diff --cached --quiet || git commit -m "publish: $(basename ${{ github.event.client_payload.draft_file }} .md)"
+          git diff --cached --quiet || git commit -m "publish: ${{ steps.move.outputs.slug }}"
           git push
 
       - name: Telegram — 발행 완료 알림
         if: success()
         run: |
-          SLUG=$(basename "${{ github.event.client_payload.draft_file }}" .md)
+          SLUG="${{ steps.move.outputs.slug }}"
           curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=✅ 발행 완료: ${SLUG}
@@ -40,8 +50,21 @@ https://wjdghtls95.github.io/blog/${SLUG}/ (1~2분 후 반영)"
       - name: Telegram — 발행 실패 알림
         if: failure()
         run: |
-          SLUG=$(basename "${{ github.event.client_payload.draft_file }}" .md)
+          SLUG="${{ steps.move.outputs.slug }}"
+
+          if [ "${{ steps.move.outcome }}" = "failure" ]; then
+            REASON="${{ steps.move.outputs.error }}"
+            REASON="${REASON:-draft 파일 이동 실패}"
+          elif [ "${{ steps.push.outcome }}" = "failure" ]; then
+            REASON="git push 실패 (충돌 또는 권한 문제)"
+          else
+            REASON="알 수 없는 오류"
+          fi
+
+          LOG_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
           curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=❌ 발행 실패: ${SLUG}
-GitHub Actions 로그 확인 필요"
+원인: ${REASON}
+로그: ${LOG_URL}"
