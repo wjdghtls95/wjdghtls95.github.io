@@ -27,3 +27,21 @@ jobs:
           git add src/content/blog/ drafts/
           git diff --cached --quiet || git commit -m "publish: $(basename ${{ github.event.client_payload.draft_file }} .md)"
           git push
+
+      - name: Telegram — 발행 완료 알림
+        if: success()
+        run: |
+          SLUG=$(basename "${{ github.event.client_payload.draft_file }}" .md)
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=✅ 발행 완료: ${SLUG}
+https://wjdghtls95.github.io/blog/${SLUG}/ (1~2분 후 반영)"
+
+      - name: Telegram — 발행 실패 알림
+        if: failure()
+        run: |
+          SLUG=$(basename "${{ github.event.client_payload.draft_file }}" .md)
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=❌ 발행 실패: ${SLUG}
+GitHub Actions 로그 확인 필요"
