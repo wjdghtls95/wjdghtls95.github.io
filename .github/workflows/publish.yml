@@ -40,17 +40,24 @@ jobs:
 
       - name: Telegram — 발행 완료 알림
         if: success()
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           SLUG="${{ steps.move.outputs.slug }}"
-          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode "text=✅ 발행 완료: ${SLUG}
-https://wjdghtls95.github.io/blog/${SLUG}/ (1~2분 후 반영)"
+          MSG="✅ 발행 완료: ${SLUG}"$'\n'"https://wjdghtls95.github.io/blog/${SLUG}/ (1~2분 후 반영)"
+          curl -s "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${CHAT_ID}" \
+            --data-urlencode "text=${MSG}"
 
       - name: Telegram — 발행 실패 알림
         if: failure()
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           SLUG="${{ steps.move.outputs.slug }}"
+          LOG_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           if [ "${{ steps.move.outcome }}" = "failure" ]; then
             REASON="${{ steps.move.outputs.error }}"
@@ -61,10 +68,7 @@ https://wjdghtls95.github.io/blog/${SLUG}/ (1~2분 후 반영)"
             REASON="알 수 없는 오류"
           fi
 
-          LOG_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode "text=❌ 발행 실패: ${SLUG}
-원인: ${REASON}
-로그: ${LOG_URL}"
+          MSG="❌ 발행 실패: ${SLUG}"$'\n'"원인: ${REASON}"$'\n'"로그: ${LOG_URL}"
+          curl -s "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${CHAT_ID}" \
+            --data-urlencode "text=${MSG}"
