@@ -38,13 +38,7 @@ jobs:
           git diff --cached --quiet || git commit -m "publish: ${{ steps.move.outputs.slug }}"
           git push
 
-      - name: blog-queue.md 업데이트 (KV 큐 → 발행됨)
-        id: update_queue
-        run: |
-          python3 scripts/update-blog-queue.py "${{ steps.move.outputs.slug }}"
-          git add blog-queue.md
-          git diff --cached --quiet || git commit -m "docs: mark ${{ steps.move.outputs.slug }} as published"
-          git push
+      # TODO: Worker POST — 7일 후 복습 큐 등록 (새 파이프라인 구현 시 추가)
 
       - name: Telegram — 발행 완료 알림
         if: success()
