@@ -1,0 +1,66 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import ArrowCard from "@components/ArrowCard.astro";
+import BackToPrevious from "@components/BackToPrevious.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  const jarvis = projects.find((p) => p.id === "jarvis");
+  if (!jarvis?.data.phases) return [];
+
+  const allPosts = await getCollection("blog", ({ data }) => !data.draft && data.project === "jarvis");
+
+  return jarvis.data.phases.map((phase) => ({
+    params: { phase: phase.id },
+    props: {
+      phase,
+      posts: allPosts
+        .filter((p) => p.data.phase === phase.id)
+        .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+const { phase, posts } = Astro.props;
+---
+
+<Layout title={`JARVIS — ${phase.name}`} description={phase.detail ?? phase.name}>
+  <Container>
+    <div class="animate">
+      <BackToPrevious href="/projects/jarvis">JARVIS AI</BackToPrevious>
+    </div>
+
+    <div class="animate my-10 space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">
+          {phase.status === "done" ? "✅" : phase.status === "in-progress" ? "🔲" : "⬜"}
+        </span>
+        <h1 class="text-2xl font-semibold text-black dark:text-white">{phase.name}</h1>
+        {phase.date && (
+          <span class="text-sm text-black/40 dark:text-white/40">{phase.date}</span>
+        )}
+      </div>
+      {phase.detail && (
+        <p class="text-sm text-black/60 dark:text-white/60">{phase.detail}</p>
+      )}
+    </div>
+
+    <div class="animate space-y-4">
+      {posts.length > 0 ? (
+        <ul class="not-prose flex flex-col gap-4">
+          {posts.map((post) => (
+            <li>
+              <ArrowCard entry={post} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-sm text-black/40 dark:text-white/40">
+          아직 작성된 글이 없습니다.
+        </p>
+      )}
+    </div>
+  </Container>
+</Layout>

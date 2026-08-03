@@ -68,9 +68,12 @@ const postsByPhase = allPosts.reduce(
                 </span>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-baseline justify-between gap-2">
-                    <span class={`text-sm font-medium ${phase.status === "done" ? "text-black dark:text-white" : "text-black/50 dark:text-white/40"}`}>
+                    <a
+                      href={`/projects/jarvis/${phase.id}`}
+                      class={`text-sm font-medium transition-colors hover:underline ${phase.status === "done" ? "text-black dark:text-white" : "text-black/50 dark:text-white/40"}`}
+                    >
                       {phase.name}
-                    </span>
+                    </a>
                     {phase.date && (
                       <span class="shrink-0 text-xs text-black/30 dark:text-white/30">{phase.date}</span>
                     )}
