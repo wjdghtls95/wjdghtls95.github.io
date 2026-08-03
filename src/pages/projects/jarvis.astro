@@ -81,8 +81,8 @@ const postsByPhase = allPosts.reduce(
                   {posts.length > 0 && (
                     <ul class="mt-1.5 space-y-0.5">
                       {posts.map((post) => (
-                        <li>
-                          <Link href={`/blog/${post.id}`} class="text-xs">
+                        <li class="text-xs">
+                          <Link href={`/blog/${post.id}`}>
                             → {post.data.title}
                           </Link>
                         </li>
