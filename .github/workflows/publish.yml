@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +38,11 @@ jobs:
           git add src/content/blog/ drafts/
           git diff --cached --quiet || git commit -m "publish: ${{ steps.move.outputs.slug }}"
           git push
+
+      - name: 배포 트리거
+        run: gh workflow run deploy.yml --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # TODO: Worker POST — 7일 후 복습 큐 등록 (새 파이프라인 구현 시 추가)
 
