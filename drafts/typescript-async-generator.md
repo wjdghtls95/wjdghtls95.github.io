@@ -45,7 +45,7 @@ for await (const value of generator()) {
 
 `AsyncGenerator`에 `for...of`를 쓰면 TypeScript가 "이건 Iterable이 아니야"라고 에러를 낸다.
 
-## 선언 방법 3가지
+## 선언 방법
 
 ```ts
 // ✅ 독립 함수
@@ -108,5 +108,22 @@ try {
   }
 } catch (e) {
   // generator 내부 에러가 여기로 옴
+}
+```
+
+에러 처리 예시가 catch 래퍼만 보여주고 generator 내부에서 실제로 throw하는 코드가 없고 어디서 에러가 오는지 불명확
+```ts
+async function* riskyGen() {
+  yield 1;
+  throw new Error('서버 에러');
+  yield 2; // 실행 안 됨
+}
+
+try {
+  for await (const v of riskyGen()) {
+    console.log(v); // 1 출력
+  }
+} catch (e) {
+  console.error(e.message); // '서버 에러'
 }
 ```
