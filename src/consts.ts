@@ -25,7 +25,7 @@ export const PROJECTS: Metadata = {
 
 export const SOCIALS: Socials = [
   {
-    NAME: "Email",
-    HREF: "mailto:wjdghtls11@gmail.com",
+    NAME: "GitHub",
+    HREF: "https://github.com/wjdghtls95",
   },
 ];
