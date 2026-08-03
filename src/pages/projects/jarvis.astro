@@ -1,0 +1,100 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import BackToPrevious from "@components/BackToPrevious.astro";
+import Link from "@components/Link.astro";
+
+const projects = await getCollection("projects");
+const jarvis = projects.find((p) => p.id === "jarvis");
+if (!jarvis) return Astro.redirect("/projects");
+
+const { title, description, status, stack, phases } = jarvis.data;
+
+const allPosts = await getCollection("blog", ({ data }) => !data.draft && data.project === "jarvis");
+
+const postsByPhase = allPosts.reduce(
+  (acc, post) => {
+    const key = post.data.phase ?? "other";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(post);
+    return acc;
+  },
+  {} as Record<string, typeof allPosts>,
+);
+---
+
+<Layout title={title} description={description}>
+  <Container>
+    <div class="animate">
+      <BackToPrevious href="/projects">Back to projects</BackToPrevious>
+    </div>
+
+    <div class="animate my-10 space-y-4">
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-semibold text-black dark:text-white">{title}</h1>
+        {status === "in-progress" && (
+          <span class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            In Progress
+          </span>
+        )}
+        {status === "done" && (
+          <span class="rounded-full bg-black/5 px-2.5 py-0.5 text-xs font-medium dark:bg-white/10">
+            Done
+          </span>
+        )}
+      </div>
+      <p class="text-black/60 dark:text-white/60">{description}</p>
+      {stack && (
+        <div class="flex flex-wrap gap-1.5">
+          {stack.map((s) => (
+            <span class="rounded border border-black/10 px-2 py-0.5 text-xs dark:border-white/15">
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {phases && (
+      <div class="animate space-y-1">
+        {phases.map((phase) => {
+          const posts = postsByPhase[phase.id] ?? [];
+          return (
+            <div class="group">
+              <div class="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-black/3 dark:hover:bg-white/3">
+                <span class="mt-0.5 w-4 shrink-0 text-sm">
+                  {phase.status === "done" ? "✅" : phase.status === "in-progress" ? "🔲" : "⬜"}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline justify-between gap-2">
+                    <span class={`text-sm font-medium ${phase.status === "done" ? "text-black dark:text-white" : "text-black/50 dark:text-white/40"}`}>
+                      {phase.name}
+                    </span>
+                    {phase.date && (
+                      <span class="shrink-0 text-xs text-black/30 dark:text-white/30">{phase.date}</span>
+                    )}
+                  </div>
+                  {phase.detail && (
+                    <p class="text-xs text-black/40 dark:text-white/40">{phase.detail}</p>
+                  )}
+                  {posts.length > 0 && (
+                    <ul class="mt-1.5 space-y-0.5">
+                      {posts.map((post) => (
+                        <li>
+                          <Link href={`/blog/${post.id}`} class="text-xs">
+                            → {post.data.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </Container>
+</Layout>
