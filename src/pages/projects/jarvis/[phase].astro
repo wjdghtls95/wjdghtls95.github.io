@@ -34,9 +34,7 @@ const { phase, posts } = Astro.props;
 
     <div class="animate my-10 space-y-2">
       <div class="flex items-center gap-2">
-        <span class="text-lg">
-          {phase.status === "done" ? "✅" : phase.status === "in-progress" ? "🔲" : "⬜"}
-        </span>
+        <span class={`mt-1.5 size-2.5 shrink-0 rounded-full ${phase.status === "done" ? "bg-black dark:bg-white" : phase.status === "in-progress" ? "border-2 border-black/50 dark:border-white/50" : "border border-black/20 dark:border-white/20"}`} />
         <h1 class="text-2xl font-semibold text-black dark:text-white">{phase.name}</h1>
         {phase.date && (
           <span class="text-sm text-black/40 dark:text-white/40">{phase.date}</span>

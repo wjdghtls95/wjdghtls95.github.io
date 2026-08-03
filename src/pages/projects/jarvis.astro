@@ -63,9 +63,7 @@ const postsByPhase = allPosts.reduce(
           return (
             <div class="group">
               <div class="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-black/3 dark:hover:bg-white/3">
-                <span class="mt-0.5 w-4 shrink-0 text-sm">
-                  {phase.status === "done" ? "✅" : phase.status === "in-progress" ? "🔲" : "⬜"}
-                </span>
+                <span class={`mt-1 size-2 shrink-0 rounded-full ${phase.status === "done" ? "bg-black dark:bg-white" : phase.status === "in-progress" ? "border border-black/50 dark:border-white/50" : "border border-black/20 dark:border-white/20"}`} />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-baseline justify-between gap-2">
                     <a
