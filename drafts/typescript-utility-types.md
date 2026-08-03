@@ -2,7 +2,7 @@
 title: "TypeScript 유틸리티 타입 실전 (Partial, Pick, Omit, Required)"
 description: "자주 쓰는 유틸리티 타입 10가지와 조합 패턴, 놓치기 쉬운 함정을 코드 중심으로 정리"
 date: "2026-07-28"
-tags: ["learning"]
+tags: ["TypeScript"]
 study: "학습/TypeScript/utility-types.md"
 rewritten: true
 ---

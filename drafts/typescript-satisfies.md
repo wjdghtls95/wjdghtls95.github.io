@@ -2,7 +2,7 @@
 title: "TypeScript satisfies 연산자, 언제 쓰는가"
 description: "타입 검사는 하되 추론된 타입을 그대로 유지하고 싶을 때 satisfies가 정확히 그 역할을 한다."
 date: "2026-07-27"
-tags: ["learning", "TypeScript"]
+tags: ["TypeScript"]
 rewritten: true
 ---
 

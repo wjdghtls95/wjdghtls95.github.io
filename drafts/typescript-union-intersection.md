@@ -2,7 +2,7 @@
 title: "union, intersection 타입 — 조합의 미학"
 description: "유니온과 인터섹션의 차이부터 Discriminated Union, 타입 가드, Exhaustive Check까지 실전 예제로 정리"
 date: "2026-07-31"
-tags: ["learning"]
+tags: ["TypeScript"]
 study: "학습/TypeScript/union-intersection.md"
 rewritten: true
 ---

@@ -2,7 +2,7 @@
 title: "Template Literal Types"
 description: "문자열 패턴을 타입 레벨에서 강제하는 Template Literal Types의 실전 활용법"
 date: "2026-07-31"
-tags: ["learning"]
+tags: ["TypeScript"]
 study: "학습/TypeScript/template-literal-types.md"
 rewritten: true
 ---

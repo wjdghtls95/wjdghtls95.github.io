@@ -2,7 +2,7 @@
 title: "async generator — 비동기 스트림 다루기"
 description: "yield로 값을 하나씩 내보내는 async generator와 for await...of의 동작 원리, 그리고 SSE 스트리밍에서 실제로 쓰이는 방식"
 date: "2026-07-31"
-tags: ["learning"]
+tags: ["TypeScript"]
 study: "학습/TypeScript/async-generator.md"
 rewritten: true
 ---
