@@ -2,7 +2,7 @@
 title: "TypeScript generics — 제대로 이해하기"
 description: "타입 파라미터로 반복 코드를 줄이는 제네릭의 기본 개념부터 keyof 제약, 실무 Repository 패턴까지"
 date: "2026-07-28"
-tags: ["learning"]
+tags: ["TypeScript"]
 study: "학습/TypeScript/generics.md"
 rewritten: true
 ---

@@ -1,8 +1,8 @@
 import type { Metadata, Site, Socials } from "@types";
 
 export const SITE: Site = {
-  TITLE: "정호의 블로그",
-  DESCRIPTION: "개발, AI, 사이드프로젝트에 대한 기록",
+  TITLE: "Dev Archive",
+  DESCRIPTION: "Notes on software engineering, AI, and building things",
   EMAIL: "lionjh95@gmail.com",
   NUM_POSTS_ON_HOMEPAGE: 5,
   NUM_PROJECTS_ON_HOMEPAGE: 3,
@@ -10,12 +10,12 @@ export const SITE: Site = {
 
 export const HOME: Metadata = {
   TITLE: "Home",
-  DESCRIPTION: "개발, AI, 사이드프로젝트에 대한 기록",
+  DESCRIPTION: "Notes on software engineering, AI, and building things",
 };
 
 export const BLOG: Metadata = {
   TITLE: "Blog",
-  DESCRIPTION: "개발하면서 정리한 글들",
+  DESCRIPTION: "Writing on things I've built and learned",
 };
 
 export const PROJECTS: Metadata = {

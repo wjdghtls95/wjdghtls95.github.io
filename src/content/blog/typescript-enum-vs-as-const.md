@@ -2,7 +2,7 @@
 title: "TypeScript enum vs as const, 언제 뭘 쓰는가"
 description: "enum과 as const는 겉으로 비슷해 보이지만 컴파일 결과가 다르다. 번들 크기, 역방향 매핑, const enum까지 실제 차이를 짚는다."
 date: "2026-07-27"
-tags: ["learning", "TypeScript"]
+tags: ["TypeScript"]
 rewritten: true
 ---
 

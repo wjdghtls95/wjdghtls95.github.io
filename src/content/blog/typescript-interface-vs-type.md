@@ -2,7 +2,7 @@
 title: "TypeScript interface vs type, 언제 뭘 쓰는가"
 description: "TypeScript에서 interface와 type을 어떤 상황에서 써야 하는지 실제 코드 예시로 정리합니다"
 date: "2026-07-23"
-tags: ["TypeScript", "개발", "백엔드"]
+tags: ["TypeScript"]
 ---
 
 TypeScript를 처음 쓰다 보면 `interface`로도 객체 구조를 정의할 수 있고, `type`으로도 할 수 있다. 둘 다 컴파일되고 에러도 안 난다. 그래서 팀마다 쓰는 방식이 달라지고, 코드베이스 안에서도 뒤섞인다
