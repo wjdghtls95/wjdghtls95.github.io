@@ -29,3 +29,7 @@ blog-queue.md
 
 # jetbrains setting folder
 .idea/
+
+# Claude Code (로컬 전용 — 공개 금지)
+CLAUDE.md
+.claude/
