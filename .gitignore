@@ -33,3 +33,4 @@ blog-queue.md
 # Claude Code (로컬 전용 — 공개 금지)
 CLAUDE.md
 .claude/
+.blog-github-token

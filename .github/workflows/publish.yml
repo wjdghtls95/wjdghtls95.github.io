@@ -44,7 +44,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO: Worker POST — 7일 후 복습 큐 등록 (새 파이프라인 구현 시 추가)
+      - name: 7일 복습 큐 등록
+        if: success() && env.REVIEW_WORKER_URL != ''
+        env:
+          REVIEW_WORKER_URL: ${{ secrets.REVIEW_WORKER_URL }}
+          REVIEW_SECRET: ${{ secrets.REVIEW_SECRET }}
+        run: |
+          SLUG="${{ steps.move.outputs.slug }}"
+          REVIEW_FILE="drafts/${SLUG}-review.json"
+          PUBLISH_DATE=$(date -u +%Y-%m-%d)
+
+          if [ -f "$REVIEW_FILE" ]; then
+            QUESTIONS=$(cat "$REVIEW_FILE")
+            TITLE=$(grep -m 1 '^title:' "src/content/blog/${SLUG}.md" | sed 's/^title:[[:space:]]*//' | tr -d '"')
+
+            curl -s -X POST \
+              -H "Content-Type: application/json" \
+              -H "X-Review-Secret: ${REVIEW_SECRET}" \
+              "${REVIEW_WORKER_URL}/review/schedule" \
+              -d "{\"slug\":\"${SLUG}\",\"title\":\"${TITLE}\",\"publishDate\":\"${PUBLISH_DATE}\",\"questions\":${QUESTIONS}}"
+          fi
 
       - name: Telegram — 발행 완료 알림
         if: success()

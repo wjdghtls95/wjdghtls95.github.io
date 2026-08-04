@@ -1,0 +1,22 @@
+[
+  {
+    "q": "Partial<T>가 shallow라는 게 무슨 의미인가? 그리고 이게 실제 코드에서 어떤 버그를 만들 수 있는가?",
+    "modelAnswer": "1단계 프로퍼티만 optional로 만들고 중첩 객체 내부는 건드리지 않는다. 예를 들어 Partial<Config>에서 db 자체는 optional이 되지만 db.host는 여전히 required다. 따라서 config.db.host를 바로 접근하면 'Object is possibly undefined' 에러가 난다 — config.db?.host처럼 옵셔널 체이닝이 필요하다."
+  },
+  {
+    "q": "Pick과 Omit 중 어느 쪽을 쓸지 판단 기준은 무엇이고, Omit에서 오타가 조용히 무시되는 이유는?",
+    "modelAnswer": "남길 게 적으면 Pick, 제외할 게 적으면 Omit을 쓴다. Omit이 오타를 무시하는 이유는 두 번째 인자 타입이 keyof T가 아니라 string | number | symbol이기 때문이다. 존재하지 않는 키를 써도 컴파일러가 에러를 내지 않아, 민감 정보를 제외하는 목적으로 쓸 때 오타가 있으면 데이터가 의도치 않게 노출될 수 있다."
+  },
+  {
+    "q": "유틸리티 타입 조합은 몇 단계까지 인라인으로 쓰고, 그 이상은 어떻게 처리하는가?",
+    "modelAnswer": "2단계까지는 인라인으로 충분히 읽힌다. Partial<Pick<User, 'name' | 'timezone'>> 같은 경우. 3단계 이상은 중간 타입으로 추출한다. type EditableFields = Pick<Omit<User, 'id'>, 'name' | 'timezone'>; type UpdateUserDto = Partial<EditableFields>; 로 쪼개는 식이다."
+  },
+  {
+    "q": "ReturnType과 Awaited를 함께 쓰는 이유는 무엇인가?",
+    "modelAnswer": "ReturnType<typeof asyncFn>은 Promise<T>를 반환한다 — Promise가 unwrap되지 않는다. Awaited<ReturnType<typeof asyncFn>>으로 해야 실제 resolve된 타입 T를 얻을 수 있다. 함수 시그니처가 바뀌면 타입도 자동으로 갱신되는 게 이 패턴의 핵심 장점이다."
+  },
+  {
+    "q": "JARVIS 서버에서 유틸리티 타입을 실제로 쓰는 패턴을 예시 하나 들어보라.",
+    "modelAnswer": "inference client에 대화 히스토리를 넘길 때 Pick<Message, 'role' | 'content'>[] 처럼 필요한 필드만 골라낸다. 또는 SafeUser = Omit<User, 'passwordHash' | 'deletedAt'>처럼 API 응답 타입에서 민감 정보를 제외한다. UpdateUserInput = Partial<Pick<User, 'name' | 'timezone' | 'locale'>>로 수정 가능한 필드를 명시적으로 제한하는 패턴도 자주 쓴다."
+  }
+]

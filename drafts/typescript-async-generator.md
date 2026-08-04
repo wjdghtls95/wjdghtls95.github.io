@@ -111,7 +111,6 @@ try {
 }
 ```
 
-에러 처리 예시가 catch 래퍼만 보여주고 generator 내부에서 실제로 throw하는 코드가 없고 어디서 에러가 오는지 불명확
 ```ts
 async function* riskyGen() {
   yield 1;
