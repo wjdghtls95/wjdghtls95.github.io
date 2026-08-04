@@ -5,6 +5,7 @@ date: "2026-07-31"
 tags: ["TypeScript"]
 study: "학습/TypeScript/template-literal-types.md"
 rewritten: true
+qa_done: true
 ---
 
 # Template Literal Types

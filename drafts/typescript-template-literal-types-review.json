@@ -1,0 +1,18 @@
+[
+  {
+    "q": "Template Literal Types에서 유니온을 넣으면 결과 타입이 어떻게 되는가?",
+    "modelAnswer": "조합된 유니온이 나온다. `Hello, ${'World' | 'NestJS'}`는 'Hello, World' | 'Hello, NestJS'가 된다. 여러 슬롯에 유니온이 동시에 들어가면 곱집합으로 폭발하기 때문에 성능 문제가 생길 수 있다."
+  },
+  {
+    "q": "Getters<T>에서 Capitalize<string & K>라고 쓰는 이유는 무엇인가?",
+    "modelAnswer": "keyof T는 string | number | symbol이 될 수 있는데, Capitalize는 extends string 제약이 있어서 non-string 타입을 넣으면 컴파일 에러가 난다. string & K로 먼저 교집합을 취해 string 키만 걸러낸 뒤 Capitalize에 넘기는 것이다. number나 symbol과의 교집합은 never가 되어 Mapped Types에서 자동으로 사라진다."
+  },
+  {
+    "q": "infer 키워드는 무엇을 하는가? Template Literal Types와 결합한 예시를 들어보라.",
+    "modelAnswer": "조건부 타입에서 패턴 매칭 + 캡처를 한다. 정규식 캡처 그룹과 비슷하다. `type ExtractPrefix<T> = T extends `${infer Prefix}_${string}` ? Prefix : never` — 'AUTH_001'을 넣으면 'AUTH'가 추출된다. 패턴이 맞지 않으면 never를 반환한다."
+  },
+  {
+    "q": "Template Literal Types의 성능 한계는 무엇이고, 언제 피해야 하는가?",
+    "modelAnswer": "유니온 조합이 많아지면 타입 체크가 크게 느려진다. 슬롯이 여러 개인데 각각 유니온 멤버가 많으면 곱집합으로 폭발한다. `/api/${string}`처럼 한쪽만 고정하는 패턴은 안전하고, 양쪽 다 큰 유니온이면 주의해야 한다."
+  }
+]
