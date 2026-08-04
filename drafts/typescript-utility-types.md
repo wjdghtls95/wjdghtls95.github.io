@@ -5,6 +5,7 @@ date: "2026-07-28"
 tags: ["TypeScript"]
 study: "학습/TypeScript/utility-types.md"
 rewritten: true
+qa_done: true
 ---
 
 `UpdateUserDto`를 만들 때 `User` 타입 프로퍼티를 일일이 복사하고, `User`가 바뀌면 DTO도 따로 수정하고 있다면 — 유틸리티 타입을 아직 안 쓰는 거다.
@@ -56,7 +57,17 @@ interface Config {
   db: { host: string; port: number };
 }
 type PartialConfig = Partial<Config>;
+// { db?: { host: string; port: number } }
 // db 자체는 optional이지만 db.host는 여전히 required
+```
+
+`db` 자체가 optional이 되기 때문에 `config.db.host`는 컴파일 에러가 난다 — `db`가 `undefined`일 수 있어서.
+
+```ts
+function applyConfig(config: Partial<Config>) {
+  console.log(config.db.host);  // ❌ Object is possibly 'undefined'
+  console.log(config.db?.host); // ✅ 옵셔널 체이닝 필요
+}
 ```
 
 중첩까지 optional이 필요하면 `DeepPartial<T>`를 직접 구현하거나 `utility-types` 라이브러리를 쓴다.
@@ -155,3 +166,31 @@ type SafeUserResponse = Omit<User, 'passwordHash' | 'deletedAt'>;
 ```
 
 `Partial<Pick<User, 'name' | 'timezone' | 'locale'>>` 패턴이 특히 유용하다. 수정 가능한 필드를 명시적으로 제한하면서, 그 중 어떤 것을 보낼지는 자유롭게 선택할 수 있다.
+
+**조합 깊이 기준 — 2단계까지는 인라인, 넘으면 추출:**
+
+```ts
+// ✅ 2단계 — 인라인으로 충분히 읽힘
+type UpdateUserDto = Partial<Pick<User, 'name' | 'timezone' | 'locale'>>;
+
+// ❌ 3단계 이상 — 설명 없이 읽기 어려움
+type T = Readonly<Partial<Pick<Omit<User, 'id'>, 'name' | 'timezone'>>>;
+
+// ✅ 중간 타입으로 쪼개기
+type EditableFields = Pick<Omit<User, 'id'>, 'name' | 'timezone'>;
+type UpdateUserDto = Partial<EditableFields>;
+```
+
+## Omit 오타 함정
+
+`Omit`은 두 번째 인자를 `keyof T`가 아니라 `string | number | symbol`로 받는다. 존재하지 않는 키를 써도 에러가 나지 않는다.
+
+```ts
+// Pick은 오타 즉시 감지
+type A = Pick<User, 'passworHash'>;   // ❌ 컴파일 에러
+
+// Omit은 오타를 조용히 무시
+type B = Omit<User, 'passworHash'>;   // ✅ 에러 없음 — passwordHash가 그대로 남음
+```
+
+민감 정보를 제외할 목적으로 `Omit`을 쓸 때 오타가 있으면 컴파일은 통과하지만 필드가 실제로 제외되지 않는다. API 응답 타입에서 쓰면 의도치 않게 데이터가 노출될 수 있다.
