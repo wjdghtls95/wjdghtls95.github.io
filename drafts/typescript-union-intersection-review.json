@@ -1,0 +1,18 @@
+[
+  {
+    "q": "Union(`|`)과 Intersection(`&`)의 핵심 차이는 무엇인가? 값이 만족해야 하는 조건이 각각 어떻게 다른가?",
+    "modelAnswer": "Union은 '또는' — 멤버 중 하나 이상을 만족하면 된다. Intersection은 '그리고' — 모든 멤버의 조건을 전부 만족해야 한다. A | B는 A이거나 B이거나 둘 다여도 되고, A & B는 A의 속성과 B의 속성을 동시에 가져야 한다."
+  },
+  {
+    "q": "Discriminated Union이 일반 Union과 다른 점은? 왜 공통 리터럴 필드(`type`, `kind`)를 붙이는가?",
+    "modelAnswer": "일반 Union은 멤버를 구분하려면 instanceof나 in 같은 타입 가드를 직접 써야 한다. Discriminated Union은 공통 리터럴 필드를 태그로 사용해서 switch 블록에서 해당 필드값만 비교하면 TypeScript가 자동으로 타입을 좁혀준다. 별도 런타임 체크 없이 각 케이스 안에서 해당 타입의 속성에 바로 접근할 수 있다."
+  },
+  {
+    "q": "사용자 정의 타입 가드에서 반환 타입을 `boolean` 대신 `e is DomainException`으로 선언하는 이유는?",
+    "modelAnswer": "boolean을 반환하면 TypeScript는 그 함수의 결과가 타입과 어떤 관계인지 모른다. if 블록 안에서도 e는 여전히 unknown이다. `e is DomainException`으로 선언하면 '이 함수가 true를 반환하면 e는 DomainException이다'라는 정보를 컴파일러에게 전달해서 if 블록 안에서 타입이 자동으로 좁혀진다."
+  },
+  {
+    "q": "Exhaustive Check에서 `never`가 왜 필요한가? 유니온에 새 케이스를 추가했을 때 어떻게 에러가 나는가?",
+    "modelAnswer": "never는 아무 값도 할당할 수 없는 타입이다. switch에서 모든 케이스를 처리하면 default에 남은 타입이 없어서 action이 never가 되고, never에 never 할당은 정상이다. 새 케이스를 추가하고 case를 빠뜨리면 default에서 action이 그 새 타입이 되는데, never에 실제 타입을 할당할 수 없어서 컴파일 에러가 난다. 처리 누락을 컴파일 타임에 잡는 패턴이다."
+  }
+]

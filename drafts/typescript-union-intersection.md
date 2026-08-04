@@ -5,6 +5,7 @@ date: "2026-07-31"
 tags: ["TypeScript"]
 study: "학습/TypeScript/union-intersection.md"
 rewritten: true
+qa_done: true
 ---
 
 TypeScript에서 타입을 조합하는 방법은 두 가지다. `|`로 "이거 또는 저거"를 표현하거나, `&`로 "이것과 저것 모두"를 표현한다.
@@ -145,6 +146,8 @@ if (isDomainException(e)) {
 
 `never`를 활용하면 유니온에 새 케이스를 추가했는데 처리하지 않으면 컴파일 에러로 잡아준다.
 
+`never`는 "이 상황은 절대 발생하면 안 된다"는 타입이다. switch에서 유니온의 모든 케이스를 처리하면 `default`에 도달했을 때 남은 타입이 없어서 `action`이 자동으로 `never`가 된다.
+
 ```ts
 type Action = 'create' | 'update' | 'delete';
 
@@ -154,13 +157,23 @@ function handle(action: Action): string {
     case 'update': return 'updated';
     case 'delete': return 'deleted';
     default:
-      const _exhaustive: never = action; // 'archive' 추가 시 컴파일 에러
+      const _exhaustive: never = action; // 모든 케이스 처리됨 → action은 never → ✅
       return _exhaustive;
   }
 }
 ```
 
-`Action`에 `'archive'`를 추가하면 default 블록에서 `action`이 `'archive'` 타입이 되어 `never`에 할당할 수 없다는 에러가 난다. switch를 업데이트하라는 신호다.
+`Action`에 `'archive'`를 추가하면 default 블록에서 `action`의 타입이 `'archive'`가 된다. `never`에는 아무 값도 할당할 수 없기 때문에 컴파일 에러가 난다 — switch를 업데이트하라는 신호다.
+
+```ts
+type Action = 'create' | 'update' | 'delete' | 'archive';
+
+// case 'archive' 추가하지 않으면
+// default: const _exhaustive: never = action;
+// ❌ Type 'archive' is not assignable to type 'never'
+```
+
+유니온에 케이스가 추가될 가능성이 높은 곳 — Alert 상태, 에러 코드 분기, 역할 권한 처리 — 에 쓰면 런타임 버그를 컴파일 타임에 미리 잡을 수 있다.
 
 ## 주의할 점
 
