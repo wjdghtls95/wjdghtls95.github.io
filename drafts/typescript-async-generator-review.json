@@ -1,0 +1,18 @@
+[
+  {
+    "q": "async generator(`async function*`)가 일반 async function과 다른 점은? 언제 필요한가?",
+    "modelAnswer": "일반 async function은 return으로 값을 한 번만 반환하고 끝난다. async generator는 yield로 값을 하나씩 내보내면서 일시 중단했다가 재개할 수 있다. Claude API처럼 응답이 청크 단위로 오는 스트리밍 상황에서 필요하다 — 전체 응답을 기다리지 않고 yield로 하나씩 내보내면 사용자가 즉시 보기 시작할 수 있다."
+  },
+  {
+    "q": "async generator에 `for...of` 대신 `for await...of`를 써야 하는 이유는?",
+    "modelAnswer": "for...of는 Iterable<T>(Symbol.iterator)만 순회하고, async generator는 AsyncIterable<T>(Symbol.asyncIterator)다. 둘은 다른 인터페이스라서 async generator에 for...of를 쓰면 TypeScript 타입 에러가 난다. 맞는 타입에 맞는 순회 방법을 써야 한다 — 선택의 여지가 없다."
+  },
+  {
+    "q": "JARVIS streamMessage()에서 DB 저장과 제목 생성을 finally에 넣은 이유는?",
+    "modelAnswer": "finally는 break, 에러, 정상 종료 어떤 경우든 항상 실행된다. 클라이언트가 연결을 끊거나 Claude API에서 에러가 나도 finally가 실행되기 때문에, 스트림이 어디서 끊기든 DB 저장과 제목 생성이 보장된다."
+  },
+  {
+    "q": "generator 내부에서 에러가 발생하면 어디로 전파되고, 어떻게 처리하는가?",
+    "modelAnswer": "for await...of 루프 밖으로 전파된다. 호출자가 for await를 감싸는 try/catch로 잡아야 한다. 실무에서는 이 방법이 가장 일반적이고, 특수한 경우 generator.throw()로 외부에서 generator 안에 에러를 주입하거나 generator.return()으로 강제 종료할 수도 있다."
+  }
+]

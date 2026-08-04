@@ -5,6 +5,7 @@ date: "2026-07-31"
 tags: ["TypeScript"]
 study: "학습/TypeScript/async-generator.md"
 rewritten: true
+qa_done: true
 ---
 
 AI 채팅 응답을 스트리밍으로 받아본 적 있다면, 그 뒤에는 async generator가 있다.
