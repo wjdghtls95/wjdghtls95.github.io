@@ -204,3 +204,4 @@ type HugeUnion = TypeA | TypeB | TypeC | TypeD | TypeE | TypeF | TypeG;
 **`strictNullChecks` 주의**
 
 `null | undefined`는 `strictNullChecks`가 켜져 있어야 유니온으로 취급된다. 꺼져 있으면 모든 타입에 `null`과 `undefined`가 할당 가능해진다.
+
