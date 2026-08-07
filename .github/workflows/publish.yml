@@ -32,8 +32,20 @@ jobs:
         run: |
           DRAFT_FILE="${{ github.event.client_payload.draft_file }}${{ github.event.inputs.draft_file }}"
 
+          if [ -z "$DRAFT_FILE" ] && [ "${{ github.event_name }}" = "push" ]; then
+            # push 트리거 — 커밋 메시지에서 slug 파싱 (SKILL.md Step 6이 의도한 파일 그대로 발행)
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            if echo "$COMMIT_MSG" | grep -q '^chore: queue .* for publish$'; then
+              SLUG=$(echo "$COMMIT_MSG" | sed 's/^chore: queue \(.*\) for publish$/\1/')
+              DRAFT_FILE="drafts/${SLUG}.md"
+            elif echo "$COMMIT_MSG" | grep -q '^chore: add review questions for '; then
+              SLUG=$(echo "$COMMIT_MSG" | sed 's/^chore: add review questions for \(.*\)$/\1/')
+              DRAFT_FILE="drafts/${SLUG}.md"
+            fi
+          fi
+
           if [ -z "$DRAFT_FILE" ]; then
-            # push 트리거 (혹은 입력 없는 수동 실행) — qa_done: true인 첫 draft 자동 탐색
+            # fallback: workflow_dispatch 또는 파싱 실패 시 qa_done: true인 첫 draft 탐색
             for f in $(ls drafts/*.md 2>/dev/null | sort); do
               [ "$(basename "$f")" = "_TEMPLATE.md" ] && continue
               if grep -q '^qa_done: true' "$f"; then
