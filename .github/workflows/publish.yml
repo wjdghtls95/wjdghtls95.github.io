@@ -1,11 +1,25 @@
 name: Publish Post
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'drafts/**'
   repository_dispatch:
     types: [publish-post]
+  workflow_dispatch:
+    inputs:
+      draft_file:
+        description: '발행할 draft 파일 경로 (예: drafts/foo.md) — 비워두면 qa_done:true 첫 항목 자동 선택'
+        required: false
 
 jobs:
   publish:
+    # 이 워크플로우 자신의 발행 커밋(publish: ...)이 다시 drafts/** push를 만들어도
+    # 재귀적으로 안 돌게 막는다
+    if: >
+      github.event_name != 'push' ||
+      !startsWith(github.event.head_commit.message, 'publish:')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -13,10 +27,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: 발행 대상 draft 결정
+        id: find
+        run: |
+          DRAFT_FILE="${{ github.event.client_payload.draft_file }}${{ github.event.inputs.draft_file }}"
+
+          if [ -z "$DRAFT_FILE" ]; then
+            # push 트리거 (혹은 입력 없는 수동 실행) — qa_done: true인 첫 draft 자동 탐색
+            for f in $(ls drafts/*.md 2>/dev/null | sort); do
+              [ "$(basename "$f")" = "_TEMPLATE.md" ] && continue
+              if grep -q '^qa_done: true' "$f"; then
+                DRAFT_FILE="$f"
+                break
+              fi
+            done
+          fi
+
+          if [ -z "$DRAFT_FILE" ]; then
+            echo "발행 대상 없음 — 종료"
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "found=true" >> $GITHUB_OUTPUT
+          echo "draft_file=$DRAFT_FILE" >> $GITHUB_OUTPUT
+
       - name: draft → blog 이동
         id: move
+        if: steps.find.outputs.found == 'true'
         run: |
-          DRAFT_FILE="${{ github.event.client_payload.draft_file }}"
+          DRAFT_FILE="${{ steps.find.outputs.draft_file }}"
           FILENAME=$(basename "$DRAFT_FILE")
           SLUG="${FILENAME%.md}"
           echo "slug=$SLUG" >> $GITHUB_OUTPUT
@@ -32,6 +72,7 @@ jobs:
 
       - name: 커밋 및 푸시
         id: push
+        if: steps.find.outputs.found == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -40,12 +81,13 @@ jobs:
           git push
 
       - name: 배포 트리거
+        if: steps.find.outputs.found == 'true'
         run: gh workflow run deploy.yml --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 7일 복습 큐 등록
-        if: success() && env.REVIEW_WORKER_URL != ''
+        if: steps.find.outputs.found == 'true' && success() && env.REVIEW_WORKER_URL != ''
         env:
           REVIEW_WORKER_URL: ${{ secrets.REVIEW_WORKER_URL }}
           REVIEW_SECRET: ${{ secrets.REVIEW_SECRET }}
@@ -66,7 +108,7 @@ jobs:
           fi
 
       - name: Telegram — 발행 완료 알림
-        if: success()
+        if: steps.find.outputs.found == 'true' && success()
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -78,7 +120,7 @@ jobs:
             --data-urlencode "text=${MSG}"
 
       - name: Telegram — 발행 실패 알림
-        if: failure()
+        if: steps.find.outputs.found == 'true' && failure()
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
