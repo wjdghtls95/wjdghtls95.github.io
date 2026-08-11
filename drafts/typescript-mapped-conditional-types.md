@@ -3,7 +3,7 @@ title: "Mapped Types와 Conditional Types — 타입을 계산하다"
 description: "TypeScript의 Mapped Types와 Conditional Types로 타입을 동적으로 변환하는 법. JARVIS Memory Tier 시스템 구현에서 실제로 쓰인 패턴."
 date: "2026-08-11"
 tags: ["TypeScript"]
-draft: false
+qa_done: true
 ---
 
 JARVIS Memory Tier 시스템을 설계할 때 문제가 하나 있었다

@@ -1,0 +1,22 @@
+[
+  {
+    "q": "Mapped Types에서 `-?`와 `-readonly`는 각각 무엇을 하는가?",
+    "modelAnswer": "`-?`는 optional 수정자를 제거해 모든 필드를 필수로 만든다. TypeScript 표준 라이브러리의 `Required<T>` 내부가 `{ [K in keyof T]-?: T[K] }`로 구현되어 있다. `-readonly`는 readonly 수정자를 제거해 Mutable 타입을 만든다. `-`는 기존에 있는 수정자를 제거하는 연산자이고, 수정자가 없는 필드에 쓰면 그냥 무시된다."
+  },
+  {
+    "q": "유니온 타입에 Conditional Types를 적용하면 왜 분배(distribution)가 일어나는가? 막으려면 어떻게 하는가?",
+    "modelAnswer": "제네릭 타입 파라미터에 유니온이 들어오면 TypeScript가 자동으로 각 멤버에 Conditional Types를 따로 적용한 뒤 유니온으로 합친다. `ToArray<string | number>`는 `ToArray<string> | ToArray<number>` → `string[] | number[]`가 된다. 막으려면 튜플로 감싼다 — `[T] extends [U]`처럼 쓰면 유니온을 단일 타입으로 취급해 분배를 막는다."
+  },
+  {
+    "q": "`KeysOfType<T, U>`에서 마지막에 `[keyof T]`로 인덱싱하는 이유는 무엇인가?",
+    "modelAnswer": "`{ [K in keyof T]: T[K] extends U ? K : never }`로 만든 타입의 값이 `'id' | 'name' | never | never`처럼 키 이름 또는 `never`의 유니온이 된다. `[keyof T]`로 인덱스 타입 접근을 하면 이 값들을 유니온으로 평탄화하면서, `never`는 유니온에서 자동 제거된다. 결과적으로 조건을 만족하는 키 이름 유니온만 남는다."
+  },
+  {
+    "q": "동형(Homomorphic) Mapped Types와 비동형의 차이는 무엇인가? 어떤 상황에서 중요한가?",
+    "modelAnswer": "`keyof T`를 순회하는 동형 Mapped Types는 원본 타입의 `readonly`, `optional` 수정자를 자동으로 유지한다. `Partial<T>`, `Required<T>`, `Pick<T, K>`가 여기 해당한다. 반면 임의 키 유니온을 순회하는 비동형(`Record<K, V>` 등)은 원본 수정자를 갖지 않는다. `Readonly<User>`에서 User의 readonly 필드가 두 번 readonly가 되지 않는 건 동형이 수정자를 \"이어받기\"만 하기 때문이다."
+  },
+  {
+    "q": "JARVIS Memory Tier에서 `Record<MemoryTier, { canPin: boolean }>` 패턴을 쓰면 새 티어 추가 시 어떤 보호를 받는가?",
+    "modelAnswer": "`Record<MemoryTier, ...>`는 `MemoryTier` 유니온의 모든 멤버가 키로 존재해야 한다고 강제한다. `ARCHIVED`를 새로 추가했는데 `TIER_PERMISSIONS` 상수에 넣지 않으면 컴파일 에러가 난다. 런타임에 `TIER_PERMISSIONS['ARCHIVED']`가 `undefined`를 반환해 조용히 실패하는 대신, 추가 즉시 타입 에러로 누락을 잡아준다."
+  }
+]
