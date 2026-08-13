@@ -35,11 +35,13 @@ jobs:
           if [ -z "$DRAFT_FILE" ] && [ "${{ github.event_name }}" = "push" ]; then
             # push 트리거 — 커밋 메시지에서 slug 파싱 (SKILL.md Step 6이 의도한 파일 그대로 발행)
             COMMIT_MSG="${{ github.event.head_commit.message }}"
-            if echo "$COMMIT_MSG" | grep -q '^chore: queue .* for publish$'; then
-              SLUG=$(echo "$COMMIT_MSG" | sed 's/^chore: queue \(.*\) for publish$/\1/')
+            # 스코프 정규화: chore(blog): → chore: 로 변환하여 슬러그 파싱 통일
+            COMMIT_MSG_NORM=$(echo "$COMMIT_MSG" | sed 's/^\([a-z]*\)([^)]*): /\1: /')
+            if echo "$COMMIT_MSG_NORM" | grep -q '^chore: queue .* for publish$'; then
+              SLUG=$(echo "$COMMIT_MSG_NORM" | sed 's/^chore: queue \(.*\) for publish$/\1/')
               DRAFT_FILE="drafts/${SLUG}.md"
-            elif echo "$COMMIT_MSG" | grep -q '^chore: add review questions for '; then
-              SLUG=$(echo "$COMMIT_MSG" | sed 's/^chore: add review questions for \(.*\)$/\1/')
+            elif echo "$COMMIT_MSG_NORM" | grep -q '^chore: add review questions for '; then
+              SLUG=$(echo "$COMMIT_MSG_NORM" | sed 's/^chore: add review questions for \(.*\)$/\1/')
               DRAFT_FILE="drafts/${SLUG}.md"
             fi
           fi
