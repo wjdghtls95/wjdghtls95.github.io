@@ -3,6 +3,8 @@ title: "JARVIS 메모리 티어: AI가 기억을 3단계로 관리하는 법"
 description: "RAG만으로는 부족했다. CORE, SEARCHABLE, ARCHIVED 3티어로 메모리를 분리해 AI 응답 품질을 높인 구현 과정"
 date: "2026-08-14"
 tags: ["JARVIS", "AI비서", "사이드프로젝트", "개발기"]
+project: "jarvis"
+phase: "memory"
 qa_done: true
 ---
 
