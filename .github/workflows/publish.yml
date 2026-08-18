@@ -46,8 +46,16 @@ jobs:
             fi
           fi
 
-          if [ -z "$DRAFT_FILE" ]; then
-            # fallback: workflow_dispatch 또는 파싱 실패 시 qa_done: true인 첫 draft 탐색
+          # fallback은 push 이벤트에는 적용 안 함 (2026-08-18 변경)
+          # 이유: SKILL.md Step 3/4가 draft 생성/재작성 직후 drafts/**에 push할 때도 이 워크플로우가 걸리는데,
+          # 그 커밋 메시지들("chore: add draft for X", "chore: rewrite X as blog post")은 위 두 패턴에 안 걸린다.
+          # 예전엔 이럴 때 fallback이 "qa_done:true인 아무 draft나" 찾아서 즉시 발행해버려서,
+          # Step 4(재작성)·Step 5(검수)를 거치기도 전에 Obsidian 원본 그대로 발행되는 레이스 컨디션이 있었다.
+          # push인데 패턴 매칭도 안 되면 그냥 "발행 대상 없음"으로 조용히 종료 — 진짜 발행 트리거는
+          # Step 6의 "chore: queue X for publish" 커밋(위에서 이미 매칭됨)뿐이어야 한다.
+          if [ -z "$DRAFT_FILE" ] && [ "${{ github.event_name }}" != "push" ]; then
+            # fallback: workflow_dispatch(또는 레거시 repository_dispatch)에서 draft_file 미지정 시
+            # qa_done: true인 첫 draft 탐색
             for f in $(ls drafts/*.md 2>/dev/null | sort); do
               [ "$(basename "$f")" = "_TEMPLATE.md" ] && continue
               if grep -q '^qa_done: true' "$f"; then
