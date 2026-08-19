@@ -8,9 +8,32 @@ const blog = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     draft: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.enum([
+      "TypeScript",
+      "NestJS",
+      "AI",
+      "데이터베이스",
+      "인증",
+      "BullMQ",
+      "아키텍처",
+      "Python",
+      "프론트엔드",
+      "Project",
+    ])).optional(),
     project: z.string().optional(),
     phase: z.string().optional(),
+    // 이전 프로젝트에서 같은 주제를 다룬 글이 있을 때 — 그 글에서 무엇이 발전됐는지
+    evolved_from: z.array(z.object({
+      project: z.string(),
+      post: z.string(),
+      change: z.string(),
+    })).optional(),
+    // 이 글의 후속작(버그 수정·방식 변경 등으로 다시 쓴 글)이 있을 때
+    updated_by: z.array(z.object({
+      post: z.string(),
+      date: z.string().optional(),
+      change: z.string(),
+    })).optional(),
   }),
 });
 

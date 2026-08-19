@@ -49,6 +49,20 @@ const prevPost = getPrevPost();
 
 const post = Astro.props;
 const { Content, headings } = await render(post);
+
+const updatedByPosts = post.data.updated_by
+  ? post.data.updated_by.map((u) => ({
+      ...u,
+      target: posts.find((p) => p.id === u.post),
+    }))
+  : [];
+
+const evolvedFromPosts = post.data.evolved_from
+  ? post.data.evolved_from.map((e) => ({
+      ...e,
+      target: posts.find((p) => p.id === e.post),
+    }))
+  : [];
 ---
 
 <Layout title={post.data.title} description={post.data.description}>
@@ -86,6 +100,42 @@ const { Content, headings } = await render(post);
         ) : null
       }
     </div>
+    {updatedByPosts.length > 0 && (
+      <div class="animate mb-6 space-y-2">
+        {updatedByPosts.map((u) => (
+          <div class="rounded-sm border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+            <span class="font-medium">이 글은 이후 업데이트됐어요</span>
+            {u.change && <span> — {u.change}</span>}
+            {u.target && (
+              <>
+                {" "}
+                <a href={`/blog/${u.target.id}/`} class="underline underline-offset-2 hover:no-underline">
+                  최신 글({u.target.data.title}) 보기 →
+                </a>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+    {evolvedFromPosts.length > 0 && (
+      <div class="animate mb-6 space-y-2">
+        {evolvedFromPosts.map((e) => (
+          <div class="rounded-sm border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm">
+            <span class="font-medium">이전 프로젝트({e.project})에서 이어지는 글이에요</span>
+            {e.change && <span> — {e.change}</span>}
+            {e.target && (
+              <>
+                {" "}
+                <a href={`/blog/${e.target.id}/`} class="underline underline-offset-2 hover:no-underline">
+                  원본 글({e.target.data.title}) 보기 →
+                </a>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
     {headings.length > 0 && <TableOfContents headings={headings} />}
     <article class="animate">
       <Content />
