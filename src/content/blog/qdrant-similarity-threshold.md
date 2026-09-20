@@ -7,8 +7,6 @@ qa_done: true
 rewritten: true
 ---
 
-<!-- source: 학습/AI/Qdrant 유사도 임계값.md -->
-
 ## 왜 필요한가
 
 벡터 검색에서 두 텍스트가 얼마나 비슷한지는 코사인 유사도로 잰다
