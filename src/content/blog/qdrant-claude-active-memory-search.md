@@ -5,6 +5,8 @@ date: "2026-09-02"
 tags: ["AI"]
 qa_done: true
 rewritten: true
+project: "jarvis"
+phase: "memory"
 ---
 
 자동 RAG는 메시지가 오면 무조건 검색부터 한다

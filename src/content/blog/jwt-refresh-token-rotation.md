@@ -5,6 +5,8 @@ date: "2026-08-24"
 tags: ["인증"]
 qa_done: true
 rewritten: true
+project: "jarvis"
+phase: "auth"
 ---
 
 Access Token은 stateless다

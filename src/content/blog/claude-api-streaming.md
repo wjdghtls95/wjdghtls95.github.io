@@ -6,6 +6,7 @@ tags: ["AI"]
 qa_done: true
 rewritten: true
 phase: "chat"
+project: "jarvis"
 ---
 
 Claude 같은 LLM은 응답 생성에 수 초에서 수십 초가 걸린다

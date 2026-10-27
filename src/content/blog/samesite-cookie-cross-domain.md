@@ -6,6 +6,7 @@ tags: ["인증"]
 qa_done: true
 phase: "auth"
 rewritten: true
+project: "jarvis"
 ---
 
 로컬에서는 멀쩡하던 로그인이 배포하면 깨지는 경우가 있다

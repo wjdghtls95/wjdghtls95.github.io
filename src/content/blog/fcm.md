@@ -5,6 +5,8 @@ date: "2026-09-05"
 tags: ["BullMQ"]
 qa_done: true
 rewritten: true
+project: "jarvis"
+phase: "alert"
 ---
 
 ## 왜 필요한가

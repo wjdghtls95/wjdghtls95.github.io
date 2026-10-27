@@ -6,6 +6,7 @@ tags: ["NestJS"]
 qa_done: true
 rewritten: true
 phase: "chat"
+project: "jarvis"
 ---
 
 AI 응답은 완성까지 수 초에서 수십 초가 걸린다

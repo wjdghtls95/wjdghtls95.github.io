@@ -6,6 +6,7 @@ tags: ["인증"]
 qa_done: true
 rewritten: true
 phase: "auth"
+project: "jarvis"
 ---
 
 유저의 Google 비밀번호를 JARVIS가 직접 받는 건 애초에 불가능한 선택지다
