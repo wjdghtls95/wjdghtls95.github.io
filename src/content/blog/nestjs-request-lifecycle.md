@@ -21,11 +21,11 @@ Guard가 Controller보다 먼저 실행된다는 걸 모르면 인증 로직을 
 
 ```mermaid
 flowchart TD
-    A[HTTP 요청] --> B[Middleware\n— cookie-parser, helmet, CORS]
-    B --> C[Guard\n— JWT 인증, 구글 OAuth]
-    C --> D[Interceptor\n— 로깅, 응답 변환]
-    D --> E[Pipe\n— ValidationPipe, DTO 변환]
-    E --> F[Controller\n— 라우팅, 요청 파싱]
+    A[HTTP 요청] --> B[Middleware<br/>— cookie-parser, helmet, CORS]
+    B --> C[Guard<br/>— JWT 인증, 구글 OAuth]
+    C --> D[Interceptor<br/>— 로깅, 응답 변환]
+    D --> E[Pipe<br/>— ValidationPipe, DTO 변환]
+    E --> F[Controller<br/>— 라우팅, 요청 파싱]
     F --> G[Service → Repository]
     G --> H[HTTP 응답]
 
