@@ -19,15 +19,7 @@ delete 성공 후 create가 실패하면 데이터가 반쪽만 남는다
 
 `@Transactional()`이 CLS(Continuation Local Storage)에 트랜잭션 컨텍스트를 주입하면, 같은 async 실행 체인에서 호출되는 모든 Repository가 자동으로 같은 tx 클라이언트를 쓴다
 
-```mermaid
-flowchart TD
-    A[Transactional 함수 시작] --> B[Prisma 트랜잭션 시작]
-    B --> C[CLS context에 tx 저장]
-    C --> D[Repository.db가 tx 클라이언트 반환]
-    D --> E{함수 정상 종료?}
-    E -- YES --> F[COMMIT]
-    E -- NO --> G[ROLLBACK]
-```
+![다이어그램](/diagrams/nestjs-transaction-1.svg)
 
 Repository 쪽 코드는 CLS에 트랜잭션이 있는지만 확인한다
 

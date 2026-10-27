@@ -17,15 +17,7 @@ Prisma는 `schema.prisma`에서 TypeScript 타입을 자동 생성해서 컴파�
 
 `schema.prisma`를 정의하면 `prisma generate`가 TypeScript 클라이언트를 만들고, Repository는 그 클라이언트로 타입 안전하게 쿼리한다
 
-```mermaid
-flowchart LR
-    A[schema.prisma] --> B[prisma generate]
-    B --> C[Prisma Client — 타입 + 쿼리 빌더]
-    C --> D[Repository — 타입 안전 쿼리]
-    D --> E[(PostgreSQL)]
-    A --> F[prisma migrate dev — SQL 마이그레이션]
-    F --> E
-```
+![다이어그램](/diagrams/prisma-1.svg)
 
 모델 정의 규칙
 

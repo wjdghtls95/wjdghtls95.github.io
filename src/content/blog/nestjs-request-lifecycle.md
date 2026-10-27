@@ -19,21 +19,7 @@ Guard가 Controller보다 먼저 실행된다는 걸 모르면 인증 로직을 
 
 요청 → Middleware → Guard → Interceptor → Pipe → Controller → Exception Filter(에러 시)
 
-```mermaid
-flowchart TD
-    A[HTTP 요청] --> B[Middleware<br/>— cookie-parser, helmet, CORS]
-    B --> C[Guard<br/>— JWT 인증, 구글 OAuth]
-    C --> D[Interceptor<br/>— 로깅, 응답 변환]
-    D --> E[Pipe<br/>— ValidationPipe, DTO 변환]
-    E --> F[Controller<br/>— 라우팅, 요청 파싱]
-    F --> G[Service → Repository]
-    G --> H[HTTP 응답]
-
-    C -->|401 Unauthorized| I[Exception Filter]
-    E -->|400 Bad Request| I
-    G -->|DomainException| I
-    I --> J[에러 HTTP 응답]
-```
+![다이어그램](/diagrams/nestjs-request-lifecycle-1.svg)
 
 ### Middleware
 

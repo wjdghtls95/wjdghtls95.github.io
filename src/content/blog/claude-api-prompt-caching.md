@@ -26,17 +26,7 @@ Prompt Caching은 반복되는 프롬프트 앞부분을 캐시에 저장해두�
 
 첫 호출에서는 캐시를 새로 생성하고, 같은 prefix로 다시 호출하면 캐시를 읽는다
 
-```mermaid
-flowchart LR
-    A[API 호출 1 — 캐시 없음] --> B[전체 토큰 처리]
-    B --> C[KV Cache 저장]
-    C --> D[cache_creation 과금]
-
-    E[API 호출 2 — prefix 동일] --> F{캐시 히트?}
-    F -- YES --> G[캐시 읽기]
-    G --> H[cache_read 과금]
-    F -- NO --> I[전체 재처리]
-```
+![다이어그램](/diagrams/claude-api-prompt-caching-1.svg)
 
 공식 문서 기준 캐시 생성 토큰은 일반 가격의 1.25배, 캐시 읽기 토큰은 0.1배로 과금된다
 캐시가 제대로 히트하면 그만큼 비용 구조가 달라진다는 뜻이다

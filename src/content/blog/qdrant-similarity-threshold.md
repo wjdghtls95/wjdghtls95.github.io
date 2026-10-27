@@ -56,21 +56,7 @@ JARVIS 메모리 시스템은 그래서 threshold를 세 개로 나눴다
 
 새 메모리가 들어왔을 때 흐름은 이렇게 갈라진다
 
-```mermaid
-flowchart TD
-    A[새 메모리 입력] --> B[임베딩 — 텍스트를 벡터로 변환]
-    B --> C{dedup 스킵 옵션?}
-    C -- YES --> I[바로 저장]
-    C -- NO --> D[검색 — score 0.75 이상 + 같은 카테고리]
-    D --> E{후보 있음?}
-    E -- NO --> I
-    E -- YES --> F{top score 0.92 이상?}
-    F -- "YES + SEARCHABLE" --> G[중복으로 판단, 버림]
-    F -- "YES + CORE" --> H[기존 삭제 후 CORE로 재저장]
-    F -- "NO, 0.75~0.92" --> J[기존 삭제 후 새것 저장]
-    H --> I
-    J --> I
-```
+![다이어그램](/diagrams/qdrant-similarity-threshold-1.svg)
 
 세 threshold는 값 하나만 다른 게 아니라 검색 대상 자체가 다르다
 

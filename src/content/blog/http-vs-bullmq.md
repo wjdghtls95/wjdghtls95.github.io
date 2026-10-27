@@ -102,15 +102,7 @@ retryStrategy: (times) => Math.min(times * 100, 3000)
 | HTTP Service | Graceful Degradation | UX 우선, 캐시 없어도 응답해야 함 |
 | BullMQ Processor | Caller-decides + Fail-fast | 재시도 보장 |
 
-```mermaid
-flowchart TD
-    CS[CacheService, 에러를 그대로 throw]
-    CS -->|HTTP Service가 호출| HTTP[Graceful Degradation, catch null]
-    CS -->|BullMQ Processor가 호출| BQ[Fail-fast, catch 없음]
-    HTTP --> NULL[null로 간주하고 로직 계속 진행]
-    BQ --> FAIL[job fail]
-    FAIL --> RETRY[BullMQ retryStrategy로 재시도]
-```
+![다이어그램](/diagrams/http-vs-bullmq-1.svg)
 
 ## JARVIS에서 실제로 어떻게 썼나
 

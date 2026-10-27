@@ -35,20 +35,7 @@ JARVIS AI 서버는 이걸 "도메인마다 책임을 하나씩 갖고, 의존�
 
 ## 단방향 의존성
 
-```mermaid
-flowchart TD
-    Auth --> User
-    Message --> Conversation
-    Message --> Memory
-    Conversation --> User
-    Memory --> User
-    Calendar --> User
-    Alert --> User
-    Alert --> Calendar
-    Task --> User
-    Briefing --> User
-    Routine --> User
-```
+![다이어그램](/diagrams/domain-design-1.svg)
 
 규칙은 단순하다
 

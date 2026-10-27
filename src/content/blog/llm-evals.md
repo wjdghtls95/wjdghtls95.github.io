@@ -124,21 +124,7 @@ MT-Bench 논문(Zheng et al., 2023)이 이 문제를 처음 체계화했다
 3. Score     — 전체 케이스 중 통과 비율
 ```
 
-```mermaid
-flowchart TD
-    A[Dataset 구성 — 입력 + 기대 동작 레이블링] --> B[LLM에 입력 전달]
-    B --> C[LLM 출력]
-    C --> D{Grader}
-    D -- Exact match --> E[정답과 비교]
-    D -- Human --> F[사람이 판단]
-    D -- LLM-as-a-Judge --> G[다른 LLM이 채점]
-    E --> H[Score 집계]
-    F --> H
-    G --> H
-    H --> I{모델 교체 시}
-    I -- Evals 있음 --> J[이전 점수와 비교 — 의사결정 가능]
-    I -- Evals 없음 --> K[비교 불가 — 교체 불가]
-```
+![다이어그램](/diagrams/llm-evals-1.svg)
 
 ## JARVIS에서는 아직
 
