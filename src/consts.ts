@@ -23,6 +23,12 @@ export const PROJECTS: Metadata = {
   DESCRIPTION: "만들고 있는 것들",
 };
 
+// Author shown in structured data. Uses the public GitHub handle, not a real name.
+export const AUTHOR = {
+  NAME: "wjdghtls95",
+  URL: "https://github.com/wjdghtls95",
+};
+
 export const SOCIALS: Socials = [
   {
     NAME: "GitHub",

@@ -1,0 +1,6 @@
+# Allow search engines and AI crawlers. Sitemap below.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://wjdghtls95.github.io/sitemap-index.xml

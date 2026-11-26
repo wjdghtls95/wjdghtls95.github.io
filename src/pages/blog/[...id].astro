@@ -8,6 +8,7 @@ import BackToPrevious from "@components/BackToPrevious.astro";
 import PostNavigation from "@components/PostNavigation.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 import Giscus from "@components/Giscus.astro";
+import { AUTHOR } from "@consts";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("blog"))
@@ -63,9 +64,24 @@ const evolvedFromPosts = post.data.evolved_from
       target: posts.find((p) => p.id === e.post),
     }))
   : [];
+
+// Structured data built only from the post's own front matter
+const postUrl = new URL(`/blog/${post.id}/`, Astro.site).toString();
+const jsonld = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.date.toISOString(),
+  inLanguage: "ko-KR",
+  url: postUrl,
+  mainEntityOfPage: postUrl,
+  author: { "@type": "Person", name: AUTHOR.NAME, url: AUTHOR.URL },
+  ...(post.data.tags?.length ? { keywords: post.data.tags.join(", ") } : {}),
+};
 ---
 
-<Layout title={post.data.title} description={post.data.description}>
+<Layout title={post.data.title} description={post.data.description} type="article" jsonld={jsonld}>
   <Container>
     <div class="animate">
       <BackToPrevious href="/blog">Back to blog</BackToPrevious>
